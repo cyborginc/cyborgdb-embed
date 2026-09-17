@@ -8,7 +8,7 @@ A static library built on ONNX Runtime. Load a supported embedding model, get th
 
 Running embedding models outside Python usually means reimplementing the parts of `sentence-transformers` that are easy to get subtly wrong — pooling mode, truncation length, normalization, query/document prefixes. Getting any of them wrong produces plausible vectors that quietly degrade retrieval rather than failing.
 
-This library pins those choices per model, ships ONNX graphs with pooling already baked in, and verifies every supported model against real `sentence-transformers` output on every release.
+This library pins those choices per model in a registry, resolves the model from its upstream repository at a fixed revision, and verifies every supported model against real `sentence-transformers` output on every release.
 
 ## Integrate
 
@@ -49,6 +49,30 @@ Defined in `registry.yaml`, which pins the upstream revision, ONNX artifact, dim
 | _TBD_ | | | |
 
 Unlisted models can be used via an override, which must supply the same metadata explicitly rather than just a model ID — guessing it is how silent drift happens. Unsupported and unverified.
+
+## Downloading and caching
+
+Models are downloaded on first use and cached on disk. Weights are fp32, matching what `sentence-transformers` loads by default — the equivalence guarantee is against that reference, so the default precision is not configurable.
+
+Each supported model pins an upstream revision and a file digest, both verified before the graph is loaded. A repository that changes underneath you will fail loudly rather than silently returning different vectors.
+
+### Offline and air-gapped use
+
+The cache directory is set with `CYBORGDB_EMBED_CACHE`, defaulting to a per-user location. Nothing outside that directory is written, and nothing is fetched for a model already present in it.
+
+To run without network access, populate the cache on a connected machine and copy it to the target:
+
+```bash
+# On a machine with network access
+cyborgdb-embed-fetch --model bge-base-en-v1.5 --cache ./embed-cache
+
+# On the air-gapped machine
+export CYBORGDB_EMBED_CACHE=/opt/cyborgdb/embed-cache
+```
+
+Set `CYBORGDB_EMBED_OFFLINE=1` to fail immediately on a cache miss instead of attempting a download. Use this in production: it turns a missing model into a startup error rather than an unexpected network call on a request path.
+
+`CYBORGDB_EMBED_ENDPOINT` overrides the download host for an internal mirror.
 
 ## Correctness
 
