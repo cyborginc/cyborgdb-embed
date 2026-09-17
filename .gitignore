@@ -1,0 +1,21 @@
+# ONNX Runtime source + build tree (multi-GB, fetched by scripts/build_ort.sh)
+.ort/
+
+# CMake
+build/
+cmake-build-*/
+CMakeUserPresets.json
+
+# Python (parity + export tooling)
+__pycache__/
+*.pyc
+.venv/
+.venv-*/
+
+# Working documents, deliberately untracked
+SPEC.md
+PLAN.md
+
+# Local artifacts
+*.log
+.DS_Store
