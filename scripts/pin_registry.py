@@ -8,6 +8,7 @@ from the LFS object id the API already exposes, so nothing is downloaded.
 Edits the pinned lines in place, leaving comments and ordering untouched.
 """
 
+import hashlib
 import json
 import os
 import re
@@ -28,6 +29,21 @@ def fetch(url):
         return json.load(response)
 
 
+def digest_of(model_id, commit, path):
+    """SHA-256 of a repository file, by downloading it.
+
+    Only for files small enough that HuggingFace keeps them in git rather than
+    LFS, so no content hash is exposed through the API.
+    """
+    url = f"https://huggingface.co/{model_id}/resolve/{commit}/{path}"
+    request = urllib.request.Request(url)
+    token = os.environ.get("HF_TOKEN")
+    if token:
+        request.add_header("Authorization", f"Bearer {token}")
+    with urllib.request.urlopen(request, timeout=120) as response:
+        return hashlib.sha256(response.read()).hexdigest()
+
+
 def resolve(model_id, onnx_path):
     """Return (commit, sha256, size) for one model's graph."""
     commit = fetch(f"{API}/{model_id}")["sha"]
@@ -45,7 +61,8 @@ def resolve(model_id, onnx_path):
         raise LookupError(f"{model_id}: {onnx_path} is not LFS-backed")
 
     sidecar = next((f for f in tree if f["path"] == onnx_path + "_data"), None)
-    return commit, lfs["oid"], entry.get("size", 0), sidecar is not None
+    tokenizer = digest_of(model_id, commit, "tokenizer.json")
+    return commit, lfs["oid"], entry.get("size", 0), sidecar is not None, tokenizer
 
 
 def main():
@@ -57,7 +74,8 @@ def main():
     for index, line in enumerate(lines):
         model = re.match(r"\s*-\s*id:\s*(\S+)", line)
         if model:
-            current = {"id": model.group(1), "onnx_path": None, "rev": None, "sha": None}
+            current = {"id": model.group(1), "onnx_path": None, "rev": None,
+                       "sha": None, "tokenizer": None}
             # The path is needed before the pin lines, and it always precedes
             # them, so collect it by scanning ahead within this block.
             for ahead in lines[index:]:
@@ -68,12 +86,14 @@ def main():
                     current["onnx_path"] = path.group(1)
                     break
             try:
-                commit, digest, size, sidecar = resolve(current["id"], current["onnx_path"])
+                commit, digest, size, sidecar, tokenizer = resolve(
+                    current["id"], current["onnx_path"])
             except (urllib.error.URLError, LookupError, KeyError) as error:
                 failures.append(f"{current['id']}: {error}")
                 current = None
                 continue
             current["rev"], current["sha"] = commit, digest
+            current["tokenizer"] = tokenizer
             note = "  (has external-data sidecar)" if sidecar else ""
             print(f"  {current['id']:<48} {commit[:12]} {size / 1e6:8.1f} MB{note}")
             pinned += 1
@@ -84,6 +104,8 @@ def main():
                 lines[index] = re.sub(r'"[^"]*"', f'"{current["rev"]}"', line, count=1)
             elif re.match(r"\s*onnx_sha256:", line):
                 lines[index] = re.sub(r'"[^"]*"', f'"{current["sha"]}"', line, count=1)
+            elif re.match(r"\s*tokenizer_sha256:", line):
+                lines[index] = re.sub(r'"[^"]*"', f'"{current["tokenizer"]}"', line, count=1)
 
     open(REGISTRY, "w").write("".join(lines))
     print(f"\npinned {pinned} models")

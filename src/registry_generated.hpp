@@ -7,7 +7,7 @@
 
 namespace cyborgdb::embed::detail {
 
-inline constexpr std::string_view kRegistryVersion = "252fbacb6a90";
+inline constexpr std::string_view kRegistryVersion = "3a52c7edbba3";
 
 enum class Pooling { ClsToken, MeanTokens, MaxTokens };
 
@@ -15,6 +15,7 @@ struct RegistryEntry {
   ModelInfo info;
   std::string_view onnx_path;
   std::string_view onnx_sha256;
+  std::string_view tokenizer_sha256;
   std::string_view query_prefix;
   std::string_view doc_prefix;
   Pooling pooling;
@@ -27,6 +28,7 @@ inline constexpr RegistryEntry kRegistry[] = {
          256, true},
         "onnx/model.onnx",
         "6fd5d72fe4589f189f8ebc006442dbb529bb7ce38f8082112682524616046452",
+        "be50c3628f2bf5bb5e3a7f17b1f74611b2561a3a27eeab05e5aa30f411572037",
         "",
         "",
         Pooling::MeanTokens,
@@ -37,6 +39,7 @@ inline constexpr RegistryEntry kRegistry[] = {
          128, true},
         "onnx/model.onnx",
         "84c56795d395593cbee215e2d635a8f0ad3199ae99f99299c44cf1eaecff3ad4",
+        "be50c3628f2bf5bb5e3a7f17b1f74611b2561a3a27eeab05e5aa30f411572037",
         "",
         "",
         Pooling::MeanTokens,
@@ -47,6 +50,7 @@ inline constexpr RegistryEntry kRegistry[] = {
          384, true},
         "onnx/model.onnx",
         "74187b16d9c946fea252e120cfd7a12c5779d8b8b86838a2e4c56573c47941bd",
+        "b8be2c30ba5dd723a6d5ee26d013da103d5408d92ddcb23747622f9e48f1d842",
         "",
         "",
         Pooling::MeanTokens,
@@ -57,6 +61,7 @@ inline constexpr RegistryEntry kRegistry[] = {
          512, true},
         "onnx/model.onnx",
         "828e1496d7fabb79cfa4dcd84fa38625c0d3d21da474a00f08db0f559940cf35",
+        "d241a60d5e8f04cc1b2b3e9ef7a4921b27bf526d9f6050ab90f9267a1f9e5c66",
         "Represent this sentence for searching relevant passages: ",
         "",
         Pooling::ClsToken,
@@ -67,6 +72,7 @@ inline constexpr RegistryEntry kRegistry[] = {
          512, true},
         "onnx/model.onnx",
         "9bc579acdba21c253c62a9bf866891355a63ffa3442b52c8a37d75b2ccb91848",
+        "d241a60d5e8f04cc1b2b3e9ef7a4921b27bf526d9f6050ab90f9267a1f9e5c66",
         "Represent this sentence for searching relevant passages: ",
         "",
         Pooling::ClsToken,
@@ -77,6 +83,7 @@ inline constexpr RegistryEntry kRegistry[] = {
          512, true},
         "onnx/model.onnx",
         "69ed3f810d3b6d13f70dff9ca89966f39c0a0e877fb88211be7bcc070df2a2ce",
+        "d241a60d5e8f04cc1b2b3e9ef7a4921b27bf526d9f6050ab90f9267a1f9e5c66",
         "Represent this sentence for searching relevant passages: ",
         "",
         Pooling::ClsToken,
@@ -87,6 +94,7 @@ inline constexpr RegistryEntry kRegistry[] = {
          512, true},
         "model.onnx",
         "4b8205be2a3c5fc53c6534d76a2012064f7309c162b806f2889c6ec8ec4fdcba",
+        "d241a60d5e8f04cc1b2b3e9ef7a4921b27bf526d9f6050ab90f9267a1f9e5c66",
         "query: ",
         "passage: ",
         Pooling::MeanTokens,
@@ -97,6 +105,7 @@ inline constexpr RegistryEntry kRegistry[] = {
          512, true},
         "onnx/model.onnx",
         "157f97ef1957d34f52efa26f8031371bf9043acc45460cec7ebe94631ac0e96b",
+        "d241a60d5e8f04cc1b2b3e9ef7a4921b27bf526d9f6050ab90f9267a1f9e5c66",
         "query: ",
         "passage: ",
         Pooling::MeanTokens,
@@ -107,6 +116,7 @@ inline constexpr RegistryEntry kRegistry[] = {
          512, true},
         "onnx/model.onnx",
         "f560bbc5da586764fc6ccf54990bac71f94e5a872ed4e1889039391c849cbcf8",
+        "d241a60d5e8f04cc1b2b3e9ef7a4921b27bf526d9f6050ab90f9267a1f9e5c66",
         "query: ",
         "passage: ",
         Pooling::MeanTokens,
@@ -117,6 +127,7 @@ inline constexpr RegistryEntry kRegistry[] = {
          512, true},
         "onnx/model.onnx",
         "ca456c06b3a9505ddfd9131408916dd79290368331e7d76bb621f1cba6bc8665",
+        "0b44a9d7b51c3c62626640cda0e2c2f70fdacdc25bbbd68038369d14ebdf4c39",
         "query: ",
         "passage: ",
         Pooling::MeanTokens,

@@ -35,7 +35,8 @@ def main(strict):
         missing = [field for field in REQUIRED if not model.get(field)]
         # An unpinned model can change underneath a built index, so shipping one
         # is worse than not supporting it.
-        unpinned = [f for f in ("revision", "onnx_sha256", "parity") if not model.get(f)]
+        unpinned = [f for f in ("revision", "onnx_sha256", "tokenizer_sha256", "parity")
+                    if not model.get(f)]
         if missing:
             sys.exit(f"{model.get('id', '?')}: missing {', '.join(missing)}")
         if unpinned:
@@ -66,6 +67,7 @@ def main(strict):
         "  ModelInfo info;",
         "  std::string_view onnx_path;",
         "  std::string_view onnx_sha256;",
+        "  std::string_view tokenizer_sha256;",
         "  std::string_view query_prefix;",
         "  std::string_view doc_prefix;",
         "  Pooling pooling;",
@@ -88,6 +90,7 @@ def main(strict):
             f'         {model["max_seq_length"]}, {str(model["normalize"]).lower()}}},',
             f'        "{escape(model["onnx_path"])}",',
             f'        "{escape(model.get("onnx_sha256") or "")}",',
+            f'        "{escape(model.get("tokenizer_sha256") or "")}",',
             f'        "{escape(model.get("query_prefix") or "")}",',
             f'        "{escape(model.get("doc_prefix") or "")}",',
             f'        {pooling[model["pooling"]]},',

@@ -1,7 +1,7 @@
 # Supported models. src/registry_generated.hpp is produced from this file by
 # scripts/gen_registry.py; edit here, never there.
 #
-# revision and onnx_sha256 are populated by the generator against the upstream
+# revision, onnx_sha256 and tokenizer_sha256 are populated by the generator against the upstream
 # repository. An entry without both is rejected: an unpinned model can change
 # underneath a built index and return different vectors with nothing failing.
 #
@@ -14,6 +14,7 @@ models:
     revision: "1110a243fdf4706b3f48f1d95db1a4f5529b4d41"
     onnx_path: onnx/model.onnx
     onnx_sha256: "6fd5d72fe4589f189f8ebc006442dbb529bb7ce38f8082112682524616046452"
+    tokenizer_sha256: "be50c3628f2bf5bb5e3a7f17b1f74611b2561a3a27eeab05e5aa30f411572037"
     dim: 384
     pooling: mean_tokens
     normalize: true
@@ -27,6 +28,7 @@ models:
     revision: "a50ef00143b4d5391434df20ae11632588ac25be"
     onnx_path: onnx/model.onnx
     onnx_sha256: "84c56795d395593cbee215e2d635a8f0ad3199ae99f99299c44cf1eaecff3ad4"
+    tokenizer_sha256: "be50c3628f2bf5bb5e3a7f17b1f74611b2561a3a27eeab05e5aa30f411572037"
     dim: 384
     pooling: mean_tokens
     normalize: true
@@ -40,6 +42,7 @@ models:
     revision: "e8c3b32edf5434bc2275fc9bab85f82640a19130"
     onnx_path: onnx/model.onnx
     onnx_sha256: "74187b16d9c946fea252e120cfd7a12c5779d8b8b86838a2e4c56573c47941bd"
+    tokenizer_sha256: "b8be2c30ba5dd723a6d5ee26d013da103d5408d92ddcb23747622f9e48f1d842"
     dim: 768
     pooling: mean_tokens
     normalize: true
@@ -53,6 +56,7 @@ models:
     revision: "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a"
     onnx_path: onnx/model.onnx
     onnx_sha256: "828e1496d7fabb79cfa4dcd84fa38625c0d3d21da474a00f08db0f559940cf35"
+    tokenizer_sha256: "d241a60d5e8f04cc1b2b3e9ef7a4921b27bf526d9f6050ab90f9267a1f9e5c66"
     dim: 384
     pooling: cls_token
     normalize: true
@@ -66,6 +70,7 @@ models:
     revision: "a5beb1e3e68b9ab74eb54cfd186867f64f240e1a"
     onnx_path: onnx/model.onnx
     onnx_sha256: "9bc579acdba21c253c62a9bf866891355a63ffa3442b52c8a37d75b2ccb91848"
+    tokenizer_sha256: "d241a60d5e8f04cc1b2b3e9ef7a4921b27bf526d9f6050ab90f9267a1f9e5c66"
     dim: 768
     pooling: cls_token
     normalize: true
@@ -79,6 +84,7 @@ models:
     revision: "d4aa6901d3a41ba39fb536a557fa166f842b0e09"
     onnx_path: onnx/model.onnx
     onnx_sha256: "69ed3f810d3b6d13f70dff9ca89966f39c0a0e877fb88211be7bcc070df2a2ce"
+    tokenizer_sha256: "d241a60d5e8f04cc1b2b3e9ef7a4921b27bf526d9f6050ab90f9267a1f9e5c66"
     dim: 1024
     pooling: cls_token
     normalize: true
@@ -92,6 +98,7 @@ models:
     revision: "ffb93f3bd4047442299a41ebb6fa998a38507c52"
     onnx_path: model.onnx      # onnx/ holds only O4 and int8 builds
     onnx_sha256: "4b8205be2a3c5fc53c6534d76a2012064f7309c162b806f2889c6ec8ec4fdcba"
+    tokenizer_sha256: "d241a60d5e8f04cc1b2b3e9ef7a4921b27bf526d9f6050ab90f9267a1f9e5c66"
     dim: 384
     pooling: mean_tokens
     normalize: true
@@ -105,6 +112,7 @@ models:
     revision: "f52bf8ec8c7124536f0efb74aca902b2995e5bcd"
     onnx_path: onnx/model.onnx
     onnx_sha256: "157f97ef1957d34f52efa26f8031371bf9043acc45460cec7ebe94631ac0e96b"
+    tokenizer_sha256: "d241a60d5e8f04cc1b2b3e9ef7a4921b27bf526d9f6050ab90f9267a1f9e5c66"
     dim: 768
     pooling: mean_tokens
     normalize: true
@@ -118,6 +126,7 @@ models:
     revision: "f169b11e22de13617baa190a028a32f3493550b6"
     onnx_path: onnx/model.onnx
     onnx_sha256: "f560bbc5da586764fc6ccf54990bac71f94e5a872ed4e1889039391c849cbcf8"
+    tokenizer_sha256: "d241a60d5e8f04cc1b2b3e9ef7a4921b27bf526d9f6050ab90f9267a1f9e5c66"
     dim: 1024
     pooling: mean_tokens
     normalize: true
@@ -131,6 +140,7 @@ models:
     revision: "614241f622f53c4eeff9890bdc4f31cfecc418b3"
     onnx_path: onnx/model.onnx
     onnx_sha256: "ca456c06b3a9505ddfd9131408916dd79290368331e7d76bb621f1cba6bc8665"
+    tokenizer_sha256: "0b44a9d7b51c3c62626640cda0e2c2f70fdacdc25bbbd68038369d14ebdf4c39"
     dim: 384
     pooling: mean_tokens
     normalize: true

@@ -131,16 +131,16 @@ Status sha256_file(const std::string& path, std::string& digest) {
   return {};
 }
 
-Status ensure_graph(const RegistryEntry& entry, const CacheConfig& given,
-                    std::string& path) {
-  const CacheConfig config = resolved_config(given);
-  path = cached_graph_path(entry, config);
+namespace {
 
+Status ensure_file(std::string_view model, std::string_view revision,
+                   std::string_view repo_path, std::string_view expected,
+                   const CacheConfig& config, const std::string& path) {
   if (fs::exists(path)) return {};
 
   if (config.offline) {
     return {StatusCode::NotCached,
-            std::string(entry.info.name) + " is not cached and offline is set"};
+            std::string(model) + " is not cached and offline is set"};
   }
 
   std::error_code code;
@@ -149,23 +149,22 @@ Status ensure_graph(const RegistryEntry& entry, const CacheConfig& given,
     return {StatusCode::DownloadFailed, "cannot create cache directory: " + code.message()};
   }
 
-  const std::string url = config.endpoint + "/" + std::string(entry.info.name) +
-                          "/resolve/" + std::string(entry.info.revision) + "/" +
-                          std::string(entry.onnx_path);
+  const std::string url = config.endpoint + "/" + std::string(model) + "/resolve/" +
+                          std::string(revision) + "/" + std::string(repo_path);
 
   // Download beside the target and rename, so an interrupted transfer never
   // leaves a partial file that later looks cached.
-  const fs::path partial = fs::path(path).string() + ".partial";
+  const fs::path partial = path + ".partial";
   if (Status status = download(url, partial); !status) return status;
 
   std::string digest;
   if (Status status = sha256_file(partial.string(), digest); !status) return status;
 
-  if (digest != entry.onnx_sha256) {
+  if (digest != expected) {
     fs::remove(partial, code);
-    return {StatusCode::DigestMismatch,
-            std::string(entry.info.name) + ": expected " +
-                std::string(entry.onnx_sha256) + ", got " + digest};
+    return {StatusCode::DigestMismatch, std::string(model) + "/" +
+                std::string(repo_path) + ": expected " + std::string(expected) +
+                ", got " + digest};
   }
 
   fs::rename(partial, path, code);
@@ -173,6 +172,25 @@ Status ensure_graph(const RegistryEntry& entry, const CacheConfig& given,
     return {StatusCode::DownloadFailed, "cannot finalise " + path + ": " + code.message()};
   }
   return {};
+}
+
+}  // namespace
+
+Status ensure_graph(const RegistryEntry& entry, const CacheConfig& given,
+                    std::string& path) {
+  const CacheConfig config = resolved_config(given);
+  path = cached_graph_path(entry, config);
+  return ensure_file(entry.info.name, entry.info.revision, entry.onnx_path,
+                     entry.onnx_sha256, config, path);
+}
+
+Status ensure_tokenizer(const RegistryEntry& entry, const CacheConfig& given,
+                        std::string& path) {
+  const CacheConfig config = resolved_config(given);
+  path = (fs::path(cached_graph_path(entry, config)).parent_path() / "tokenizer.json")
+             .string();
+  return ensure_file(entry.info.name, entry.info.revision, "tokenizer.json",
+                     entry.tokenizer_sha256, config, path);
 }
 
 }  // namespace cyborgdb::embed::detail

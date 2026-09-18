@@ -1,6 +1,7 @@
 #include "session.hpp"
 
 #include "resolve.hpp"
+#include "tokenizer.hpp"
 
 namespace cyborgdb::embed::detail {
 
@@ -29,8 +30,18 @@ Status load_session(const RegistryEntry& entry, Provider provider, int threads,
     return status;
   }
 
+  std::string tokenizer_json;
+  if (Status status = ensure_tokenizer(entry, config, tokenizer_json); !status) {
+    return status;
+  }
+
+  std::unique_ptr<Tokenizer> tokenizer;
+  if (Status status = Tokenizer::load(tokenizer_json, tokenizer); !status) {
+    return status;
+  }
+
   return {StatusCode::ModelLoadFailed,
-          "graph is cached at " + graph + "; inference needs the tokenizer"};
+          "graph and tokenizer are cached and loadable; inference is next"};
 }
 
 }  // namespace cyborgdb::embed::detail

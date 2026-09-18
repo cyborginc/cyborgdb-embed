@@ -36,6 +36,7 @@ add_library(cyborgdb_embed STATIC
   src/resolve.cpp
   src/embed.cpp
   src/ort_api.cpp
+  src/tokenizer.cpp
   src/session.cpp)
 add_library(cyborgdb::embed ALIAS cyborgdb_embed)
 
@@ -49,4 +50,6 @@ target_include_directories(cyborgdb_embed
 target_compile_features(cyborgdb_embed PUBLIC cxx_std_17)
 
 include(cmake/onnxruntime.cmake)
-target_link_libraries(cyborgdb_embed PRIVATE cyborgdb::onnxruntime CURL::libcurl OpenSSL::Crypto)
+include(cmake/tokenizer.cmake)
+target_link_libraries(cyborgdb_embed
+  PRIVATE cyborgdb::onnxruntime cyborgdb::tokenizer CURL::libcurl OpenSSL::Crypto)

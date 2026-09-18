@@ -15,10 +15,12 @@ CacheConfig resolved_config(const CacheConfig&);
 // of one model coexist and nothing needs invalidating.
 std::string cached_graph_path(const RegistryEntry&, const CacheConfig&);
 
-// Returns the local path, downloading and verifying first if it is absent.
-// Verification is not optional: an unverified graph can differ from the one the
-// parity run measured, and nothing downstream would notice.
+// Return local paths, downloading and verifying first if absent. Verification is
+// not optional: an unverified file can differ from the one the parity run
+// measured, and nothing downstream would notice. That applies to the tokenizer
+// as much as the graph — a changed tokenizer moves every vector.
 Status ensure_graph(const RegistryEntry&, const CacheConfig&, std::string& path);
+Status ensure_tokenizer(const RegistryEntry&, const CacheConfig&, std::string& path);
 
 Status sha256_file(const std::string& path, std::string& digest);
 
