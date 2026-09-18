@@ -21,9 +21,21 @@ set(CYBORGDB_EMBED_TOKENIZER_LIBRARY
     CACHE FILEPATH "Prebuilt tokenizer archive")
 
 if(NOT EXISTS "${CYBORGDB_EMBED_TOKENIZER_LIBRARY}")
-  message(FATAL_ERROR
-    "No tokenizer archive at ${CYBORGDB_EMBED_TOKENIZER_LIBRARY}. "
-    "Run scripts/build_tokenizer.sh, which needs cargo.")
+  if(CYBORGDB_EMBED_BUILD_VENDORED)
+    message(STATUS "Building the tokenizer from source; this needs cargo")
+    execute_process(
+      COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/scripts/build_tokenizer.sh" all
+      WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+      RESULT_VARIABLE _tokenizer_build)
+    if(NOT _tokenizer_build EQUAL 0)
+      message(FATAL_ERROR "scripts/build_tokenizer.sh failed; is cargo installed?")
+    endif()
+  else()
+    message(FATAL_ERROR
+      "No tokenizer archive at ${CYBORGDB_EMBED_TOKENIZER_LIBRARY}.\n"
+      "Run scripts/build_tokenizer.sh, or configure with "
+      "-DCYBORGDB_EMBED_BUILD_VENDORED=ON to build it here. Needs cargo.")
+  endif()
 endif()
 
 add_library(cyborgdb_tokenizer STATIC IMPORTED GLOBAL)

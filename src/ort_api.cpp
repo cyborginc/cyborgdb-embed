@@ -28,8 +28,6 @@ Status init_ort() noexcept {
   return {};
 }
 
-const OrtApi* ort_api() noexcept { return g_api; }
-
 std::string ort_version() {
   const OrtApiBase* base = OrtGetApiBase();
   return base != nullptr ? base->GetVersionString() : std::string{};

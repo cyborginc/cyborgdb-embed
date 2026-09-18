@@ -20,9 +20,6 @@ namespace cyborgdb::embed::detail {
 // Idempotent. Safe to call from any thread.
 Status init_ort() noexcept;
 
-// Null until init_ort has returned Ok.
-const OrtApi* ort_api() noexcept;
-
 std::string ort_version();
 
 }  // namespace cyborgdb::embed::detail

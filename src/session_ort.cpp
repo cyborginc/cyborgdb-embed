@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "ort_api.hpp"
+#include "pooling.hpp"
 #include "resolve.hpp"
 #include "session.hpp"
 #include "tokenizer.hpp"
@@ -24,53 +25,6 @@ Ort::Env& environment() {
 // ones, and peak resident memory is set by whichever batch happened to be widest.
 constexpr std::size_t kMaxBatchTokens = 8192;
 constexpr std::size_t kMaxBatchRows = 64;
-
-void pool(const float* hidden, const std::int64_t* mask, std::size_t rows,
-          std::size_t width, std::size_t dim, Pooling mode, float* out) {
-  for (std::size_t r = 0; r < rows; ++r) {
-    const float* row = hidden + r * width * dim;
-    float* dest = out + r * dim;
-
-    if (mode == Pooling::ClsToken) {
-      std::copy_n(row, dim, dest);
-      continue;
-    }
-    if (mode == Pooling::MaxTokens) {
-      std::fill_n(dest, dim, -std::numeric_limits<float>::infinity());
-      for (std::size_t t = 0; t < width; ++t) {
-        if (!mask[r * width + t]) continue;
-        for (std::size_t d = 0; d < dim; ++d) {
-          dest[d] = std::max(dest[d], row[t * dim + d]);
-        }
-      }
-      continue;
-    }
-
-    std::fill_n(dest, dim, 0.0f);
-    float count = 0.0f;
-    for (std::size_t t = 0; t < width; ++t) {
-      if (!mask[r * width + t]) continue;
-      count += 1.0f;
-      for (std::size_t d = 0; d < dim; ++d) {
-        dest[d] += row[t * dim + d];
-      }
-    }
-    // An all-padding row would divide by zero; empty input is a real case.
-    const float divisor = count > 0.0f ? count : 1.0f;
-    for (std::size_t d = 0; d < dim; ++d) dest[d] /= divisor;
-  }
-}
-
-void l2_normalize(float* vectors, std::size_t rows, std::size_t dim) {
-  for (std::size_t r = 0; r < rows; ++r) {
-    float* row = vectors + r * dim;
-    float sum = 0.0f;
-    for (std::size_t d = 0; d < dim; ++d) sum += row[d] * row[d];
-    const float norm = std::sqrt(sum);
-    if (norm <= 1e-12f) continue;
-    for (std::size_t d = 0; d < dim; ++d) row[d] /= norm;
-  }
-}
 
 class OrtSession final : public Session {
  public:

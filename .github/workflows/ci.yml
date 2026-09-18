@@ -95,6 +95,23 @@ jobs:
           done
           echo "ok"
 
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y libcurl4-openssl-dev libssl-dev lcov
+
+      # The golden test needs a model, and without it the inference path reads
+      # as uncovered. Cached by pinned revision, so a re-pin refetches.
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/cyborgdb-embed
+          key: models-${{ hashFiles('registry.yaml') }}
+
+      - run: ./scripts/coverage.sh
+        env:
+          CYBORGDB_EMBED_CACHE: ~/.cache/cyborgdb-embed
+
   registry:
     runs-on: ubuntu-latest
     steps:

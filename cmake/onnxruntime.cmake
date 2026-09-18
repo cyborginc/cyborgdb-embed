@@ -29,9 +29,23 @@ set(CYBORGDB_EMBED_ORT_INCLUDE_DIR
     CACHE PATH "ONNX Runtime headers")
 
 if(NOT EXISTS "${CYBORGDB_EMBED_ORT_LIBRARY}")
-  message(FATAL_ERROR
-    "No ONNX Runtime archive at ${CYBORGDB_EMBED_ORT_LIBRARY}. "
-    "Run scripts/build_ort.sh, or set CYBORGDB_EMBED_ORT_LIBRARY.")
+  if(CYBORGDB_EMBED_BUILD_VENDORED)
+    # Deliberately opt-in: this takes 10 to 20 minutes, and a configure step that
+    # silently does that is worse than one that fails in a second saying how.
+    message(STATUS "Building ONNX Runtime from source; this takes 10-20 minutes")
+    execute_process(
+      COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/scripts/build_ort.sh" all
+      WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+      RESULT_VARIABLE _ort_build)
+    if(NOT _ort_build EQUAL 0)
+      message(FATAL_ERROR "scripts/build_ort.sh failed")
+    endif()
+  else()
+    message(FATAL_ERROR
+      "No ONNX Runtime archive at ${CYBORGDB_EMBED_ORT_LIBRARY}.\n"
+      "Run scripts/build_ort.sh, configure with -DCYBORGDB_EMBED_BUILD_VENDORED=ON "
+      "to build it here, or set CYBORGDB_EMBED_ORT_LIBRARY to an existing archive.")
+  endif()
 endif()
 
 add_library(cyborgdb_onnxruntime STATIC IMPORTED GLOBAL)

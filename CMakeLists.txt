@@ -21,6 +21,10 @@ endif()
 option(CYBORGDB_EMBED_BUILD_TESTS "Build tests" ${cyborgdb_embed_top_level})
 option(CYBORGDB_EMBED_COVERAGE "Instrument for coverage" OFF)
 
+# Rebuild the committed archives instead of failing when one is absent. Opt-in:
+# ONNX Runtime takes 10 to 20 minutes and the tokenizer needs a Rust toolchain.
+option(CYBORGDB_EMBED_BUILD_VENDORED "Build vendored archives from source" OFF)
+
 if(CYBORGDB_EMBED_COVERAGE)
   if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     add_compile_options(-fprofile-instr-generate -fcoverage-mapping)
@@ -76,6 +80,11 @@ if(CYBORGDB_EMBED_BUILD_TESTS)
   target_link_libraries(bench PRIVATE cyborgdb::embed)
   find_package(Threads REQUIRED)
   target_link_libraries(bench PRIVATE Threads::Threads)
+
+  add_executable(pooling_test tests/unit/pooling_test.cpp)
+  target_link_libraries(pooling_test PRIVATE cyborgdb::embed)
+  target_include_directories(pooling_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+  add_test(NAME pooling COMMAND pooling_test)
 
   add_executable(error_test tests/unit/error_test.cpp)
   target_link_libraries(error_test PRIVATE cyborgdb::embed)

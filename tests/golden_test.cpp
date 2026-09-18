@@ -154,6 +154,26 @@ int main(int argc, char** argv) {
     const std::size_t dim = model.dimension();
     std::vector<float> vectors(views.size() * dim);
 
+    // Failure paths that need an open session.
+    {
+      std::vector<float> tiny(dim - 1);
+      if (model.embed_documents(views.data(), 1, tiny.data(), tiny.size()).code !=
+          embed::StatusCode::OutputTooSmall) {
+        std::printf("%-44s FAIL  undersized output not rejected\n", name.c_str());
+        ++failures;
+      }
+      if (model.embed_documents(nullptr, 1, vectors.data(), vectors.size()).code !=
+          embed::StatusCode::InvalidArgument) {
+        std::printf("%-44s FAIL  null texts not rejected\n", name.c_str());
+        ++failures;
+      }
+      // An empty batch is not an error; it writes nothing and succeeds.
+      if (!model.embed_documents(views.data(), 0, vectors.data(), vectors.size())) {
+        std::printf("%-44s FAIL  empty batch rejected\n", name.c_str());
+        ++failures;
+      }
+    }
+
     for (const char* kind : {"document", "query"}) {
       const auto reference =
           read_vectors(data_dir + "/golden/" + slug + "/reference-" + kind + ".f32");

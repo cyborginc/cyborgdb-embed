@@ -33,8 +33,10 @@ Status SessionStore::acquire(const RegistryEntry& entry, Provider provider,
         return {};
       }
       // A load already in flight is still worth waiting on, even though the
-      // weak entry has expired: the loader will publish into it.
+      // weak entry has expired: the loader will publish into it. Waiting counts
+      // as sharing — the caller gets a session it did not have to build.
       if (it->second.pending.valid()) {
+        ++shared_;
         pending = it->second.pending;
       }
     }

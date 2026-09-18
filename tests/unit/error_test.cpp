@@ -7,10 +7,13 @@
 #include <cyborgdb_embed/embed.hpp>
 
 #include <cstdio>
+#include <atomic>
+#include <chrono>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <string>
+#include <thread>
 #include <vector>
 
 namespace embed = cyborgdb::embed;
@@ -207,6 +210,113 @@ void digest_mismatch(const fs::path& scratch) {
   expect(!fs::exists(cached), "a mismatched download is discarded");
 }
 
+// A cached file is not re-verified on use: digests are checked when a file is
+// downloaded, not on every open. So corruption after the fact has to surface as
+// a clean failure rather than a crash or a plausible vector.
+fs::path seed_cache(const fs::path& cache, const embed::ModelInfo& info) {
+  const fs::path dir = fs::path(cache) / "BAAI_bge-small-en-v1.5" /
+                       std::string(info.revision);
+  fs::create_directories(dir);
+  return dir;
+}
+
+// The tokenizer is loaded before the graph, so each test corrupts one file and
+// copies the other intact; otherwise the first failure masks the second.
+void corrupt_graph(const fs::path& scratch, const fs::path& real_tokenizer) {
+  if (real_tokenizer.empty()) return;
+  const embed::ModelInfo& info = embed::info(embed::ModelId::BgeSmallEnV15);
+  const fs::path cache = scratch / "corrupt-graph";
+  const fs::path dir = seed_cache(cache, info);
+  std::ofstream(dir / "model.onnx") << "not a protobuf";
+  fs::copy_file(real_tokenizer, dir / "tokenizer.json",
+                fs::copy_options::overwrite_existing);
+
+  embed::CacheConfig config;
+  config.cache_dir = cache.string();
+  config.offline = true;
+  embed::configure_cache(config);
+
+  embed::Embedder model;
+  expect_code(embed::open(embed::ModelId::BgeSmallEnV15, {}, model),
+              embed::StatusCode::ModelLoadFailed, "a corrupt graph in the cache");
+  expect(!model.valid(), "a failed load leaves the handle unopened");
+}
+
+void corrupt_tokenizer(const fs::path& scratch, const fs::path& real_graph) {
+  if (real_graph.empty()) return;  // nothing cached to copy; covered elsewhere
+  const embed::ModelInfo& info = embed::info(embed::ModelId::BgeSmallEnV15);
+  const fs::path cache = scratch / "corrupt-tokenizer";
+  const fs::path dir = seed_cache(cache, info);
+  fs::copy_file(real_graph, dir / "model.onnx", fs::copy_options::overwrite_existing);
+  std::ofstream(dir / "tokenizer.json") << "definitely not a tokenizer";
+
+  embed::CacheConfig config;
+  config.cache_dir = cache.string();
+  config.offline = true;
+  embed::configure_cache(config);
+
+  embed::Embedder model;
+  expect_code(embed::open(embed::ModelId::BgeSmallEnV15, {}, model),
+              embed::StatusCode::TokenizerFailed, "a corrupt tokenizer in the cache");
+}
+
+// Files a previous run already fetched, if any. Absent them these two cases are
+// skipped rather than asserted against a cache that was never populated.
+fs::path cached_file(const char* name) {
+  const char* dir = std::getenv("CYBORGDB_EMBED_CACHE");
+  if (dir == nullptr) return {};
+  const embed::ModelInfo& info = embed::info(embed::ModelId::BgeSmallEnV15);
+  const fs::path path = fs::path(dir) / "BAAI_bge-small-en-v1.5" /
+                        std::string(info.revision) / name;
+  return fs::exists(path) ? path : fs::path{};
+}
+
+void load_accounting() {
+  const embed::LoadStats before = embed::load_stats();
+  expect(before.loaded + before.shared > 0, "opens are counted");
+
+  embed::CacheConfig config;
+  config.cache_dir = "/nonexistent-for-stats";
+  config.offline = true;
+  embed::configure_cache(config);
+  embed::Embedder model;
+  embed::open(embed::ModelId::BgeSmallEnV15, {}, model);
+
+  const embed::LoadStats after = embed::load_stats();
+  expect(after.loaded >= before.loaded, "a failed open still counts as an attempt");
+  expect(embed::loaded_models().empty(), "nothing is live after a failed open");
+}
+
+// Two callers opening one model must load it once. The second waits on the
+// first rather than starting its own download.
+void concurrent_open(const fs::path& real_graph) {
+  if (real_graph.empty()) return;
+
+  embed::CacheConfig config;
+  config.cache_dir = std::getenv("CYBORGDB_EMBED_CACHE");
+  embed::configure_cache(config);
+
+  const embed::LoadStats before = embed::load_stats();
+  std::vector<std::thread> threads;
+  std::atomic<int> opened{0};
+  for (int i = 0; i < 4; ++i) {
+    threads.emplace_back([&] {
+      embed::Embedder model;
+      if (embed::open(embed::ModelId::BgeSmallEnV15, {}, model)) {
+        opened.fetch_add(1);
+        // Hold it so the others find a live session rather than a fresh load.
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+      }
+    });
+  }
+  for (auto& thread : threads) thread.join();
+
+  const embed::LoadStats after = embed::load_stats();
+  expect(opened.load() == 4, "every concurrent caller gets a session");
+  expect(after.loaded - before.loaded <= 1, "concurrent opens load at most once");
+  expect(after.shared > before.shared, "the rest share the loaded session");
+}
+
 }  // namespace
 
 int main() {
@@ -225,6 +335,10 @@ int main() {
   offline_miss(scratch);
   download_failure(scratch);
   digest_mismatch(scratch);
+  corrupt_graph(scratch, cached_file("tokenizer.json"));
+  corrupt_tokenizer(scratch, cached_file("model.onnx"));
+  load_accounting();
+  concurrent_open(cached_file("model.onnx"));
 
   fs::remove_all(scratch);
   std::printf("%d checks, %d failed\n", checks, failures);
