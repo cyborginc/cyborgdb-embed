@@ -27,9 +27,11 @@ class Session {
   std::size_t resident_bytes = 0;
 };
 
-// Resolves the model, verifies it, and loads it. Blocking.
+// Resolves the model, verifies it, and loads it. Blocking: downloads on a cold
+// cache. The cache passes its own configuration rather than being consulted from
+// here, which would be circular.
 Status load_session(const RegistryEntry&, Provider, int threads,
-                    std::shared_ptr<Session>& out);
+                    const CacheConfig&, std::shared_ptr<Session>& out);
 
 std::string_view registry_version() noexcept;
 

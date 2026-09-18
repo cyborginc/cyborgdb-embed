@@ -1,11 +1,13 @@
 #include "session.hpp"
 
+#include "resolve.hpp"
+
 namespace cyborgdb::embed::detail {
 
 std::string_view registry_version() noexcept { return kRegistryVersion; }
 
 Status load_session(const RegistryEntry& entry, Provider provider, int threads,
-                    std::shared_ptr<Session>& out) {
+                    const CacheConfig& config, std::shared_ptr<Session>& out) {
   (void)threads;
   (void)out;
 
@@ -22,9 +24,13 @@ Status load_session(const RegistryEntry& entry, Provider provider, int threads,
                 " has no pinned revision or digest; run the registry pin job"};
   }
 
+  std::string graph;
+  if (Status status = ensure_graph(entry, config, graph); !status) {
+    return status;
+  }
+
   return {StatusCode::ModelLoadFailed,
-          "model loading is not implemented: needs the tokenizer and the "
-          "download path"};
+          "graph is cached at " + graph + "; inference needs the tokenizer"};
 }
 
 }  // namespace cyborgdb::embed::detail

@@ -28,8 +28,12 @@ set(CYBORGDB_EMBED_FLATBUFFERS_SOURCE_DIR "" CACHE PATH "flatbuffers source for 
 set(CYBORGDB_EMBED_RE2_SOURCE_DIR         "" CACHE PATH "re2 source for ONNX Runtime")
 set(CYBORGDB_EMBED_PROTOBUF_SOURCE_DIR    "" CACHE PATH "protobuf source for ONNX Runtime")
 
+find_package(CURL REQUIRED)
+find_package(OpenSSL REQUIRED)
+
 add_library(cyborgdb_embed STATIC
   src/cache.cpp
+  src/resolve.cpp
   src/embed.cpp
   src/ort_api.cpp
   src/session.cpp)
@@ -45,4 +49,4 @@ target_include_directories(cyborgdb_embed
 target_compile_features(cyborgdb_embed PUBLIC cxx_std_17)
 
 include(cmake/onnxruntime.cmake)
-target_link_libraries(cyborgdb_embed PRIVATE cyborgdb::onnxruntime)
+target_link_libraries(cyborgdb_embed PRIVATE cyborgdb::onnxruntime CURL::libcurl OpenSSL::Crypto)

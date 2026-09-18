@@ -56,7 +56,12 @@ Status SessionCache::acquire(const RegistryEntry& entry, Provider provider,
   // Loading happens outside the lock: it downloads and can take seconds.
   if (promise) {
     std::shared_ptr<Session> session;
-    const Status status = load_session(entry, provider, threads, session);
+    CacheConfig config;
+    {
+      std::lock_guard<std::mutex> guard(mutex_);
+      config = config_;
+    }
+    const Status status = load_session(entry, provider, threads, config, session);
     promise->set_value(status.ok() ? session : nullptr);
 
     std::lock_guard<std::mutex> guard(mutex_);
