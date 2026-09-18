@@ -1,0 +1,3 @@
+# Build-time only: scripts/gen_registry.py reads registry.yaml.
+# Not needed to build the library — src/registry_generated.hpp is committed.
+PyYAML>=6.0

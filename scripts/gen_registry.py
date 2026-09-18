@@ -9,7 +9,10 @@ import hashlib
 import pathlib
 import sys
 
-import yaml
+try:
+    import yaml
+except ImportError:
+    sys.exit("PyYAML is required: pip install -r scripts/requirements.txt")
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 REGISTRY = ROOT / "registry.yaml"
