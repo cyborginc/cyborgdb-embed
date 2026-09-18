@@ -7,7 +7,11 @@
 
 #include <string>
 
-#include <onnxruntime_c_api.h>
+// Manual init keeps the C++ wrapper's global pointing at the table acquired
+// here, so there is still exactly one place this library reaches ONNX Runtime.
+#define ORT_API_MANUAL_INIT
+#include <onnxruntime_cxx_api.h>
+#undef ORT_API_MANUAL_INIT
 
 #include "cyborgdb_embed/embed.hpp"
 

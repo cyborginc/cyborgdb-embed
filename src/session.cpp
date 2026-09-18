@@ -1,6 +1,7 @@
 #include "session.hpp"
 
 #include "resolve.hpp"
+#include "ort_api.hpp"
 #include "tokenizer.hpp"
 
 namespace cyborgdb::embed::detail {
@@ -35,13 +36,12 @@ Status load_session(const RegistryEntry& entry, Provider provider, int threads,
     return status;
   }
 
-  std::unique_ptr<Tokenizer> tokenizer;
-  if (Status status = Tokenizer::load(tokenizer_json, tokenizer); !status) {
+  // Must precede any ONNX Runtime type: constructing one before the API table
+  // is acquired dereferences a null pointer.
+  if (Status status = init_ort(); !status) {
     return status;
   }
-
-  return {StatusCode::ModelLoadFailed,
-          "graph and tokenizer are cached and loadable; inference is next"};
+  return make_ort_session(entry, provider, threads, graph, tokenizer_json, out);
 }
 
 }  // namespace cyborgdb::embed::detail

@@ -35,6 +35,11 @@ Status load_session(const RegistryEntry&, Provider, int threads,
 
 std::string_view registry_version() noexcept;
 
+// Defined in session_ort.cpp, which is the only place ONNX Runtime types appear.
+Status make_ort_session(const RegistryEntry&, Provider, int threads,
+                        const std::string& graph, const std::string& tokenizer_json,
+                        std::shared_ptr<Session>& out);
+
 }  // namespace cyborgdb::embed::detail
 
 #endif  // CYBORGDB_EMBED_SESSION_HPP

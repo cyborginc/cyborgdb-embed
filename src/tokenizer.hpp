@@ -20,19 +20,22 @@ class Tokenizer {
   Tokenizer(const Tokenizer&) = delete;
   Tokenizer& operator=(const Tokenizer&) = delete;
 
+  // Truncation is fixed here, and applied by the tokenizer so the trailing
+  // separator token survives. Trimming ids afterwards would drop it.
   static Status load(const std::string& tokenizer_json_path,
-                     std::unique_ptr<Tokenizer>& out);
+                     std::size_t max_tokens, std::unique_ptr<Tokenizer>& out);
 
-  // Ids for one string, truncated to max_tokens. The caller's prefix is applied
-  // before tokenisation, not after: a prefix tokenises differently joined to the
-  // text than on its own.
+  // The caller's prefix is applied before tokenisation, not after: a prefix
+  // tokenises differently joined to the text than on its own.
   Status encode(std::string_view text, std::string_view prefix,
-                std::size_t max_tokens, std::vector<std::uint32_t>& ids) const;
+                std::vector<std::uint32_t>& ids) const;
 
  private:
-  explicit Tokenizer(void* handle) noexcept : handle_(handle) {}
+  Tokenizer(void* handle, std::size_t max_tokens) noexcept
+      : handle_(handle), max_tokens_(max_tokens) {}
 
   void* handle_;
+  std::size_t max_tokens_;
 };
 
 }  // namespace cyborgdb::embed::detail

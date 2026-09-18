@@ -15,6 +15,9 @@ Status init_ort() noexcept {
     const OrtApiBase* base = OrtGetApiBase();
     if (base != nullptr) {
       g_api = base->GetApi(ORT_API_VERSION);
+      if (g_api != nullptr) {
+        Ort::InitApi(g_api);
+      }
     }
   });
   if (g_api == nullptr) {
