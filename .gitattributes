@@ -1,0 +1,10 @@
+# Build tooling
+docker/**           linguist-vendored
+cmake/**            linguist-vendored
+CMakeLists.txt      linguist-vendored
+*.cmake             linguist-vendored
+scripts/*.py        linguist-vendored
+scripts/*.sh        linguist-vendored
+
+# Generated code
+src/registry_generated.hpp  linguist-generated
