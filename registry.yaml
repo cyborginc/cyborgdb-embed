@@ -1,0 +1,140 @@
+# Supported models. src/registry_generated.hpp is produced from this file by
+# scripts/gen_registry.py; edit here, never there.
+#
+# revision and onnx_sha256 are populated by the generator against the upstream
+# repository. An entry without both is rejected: an unpinned model can change
+# underneath a built index and return different vectors with nothing failing.
+#
+# parity is written by the nightly comparison run. An entry without a verdict
+# does not ship.
+
+models:
+  - id: sentence-transformers/all-MiniLM-L6-v2
+    enum: AllMiniLmL6V2
+    revision: ""
+    onnx_path: onnx/model.onnx
+    onnx_sha256: ""
+    dim: 384
+    pooling: mean_tokens
+    normalize: true
+    max_seq_length: 256        # not max_position_embeddings, which is 512
+    query_prefix: ""
+    doc_prefix: ""
+    parity: ""
+
+  - id: sentence-transformers/all-MiniLM-L12-v2
+    enum: AllMiniLmL12V2
+    revision: ""
+    onnx_path: onnx/model.onnx
+    onnx_sha256: ""
+    dim: 384
+    pooling: mean_tokens
+    normalize: true
+    max_seq_length: 128
+    query_prefix: ""
+    doc_prefix: ""
+    parity: ""
+
+  - id: sentence-transformers/all-mpnet-base-v2
+    enum: AllMpnetBaseV2
+    revision: ""
+    onnx_path: onnx/model.onnx
+    onnx_sha256: ""
+    dim: 768
+    pooling: mean_tokens
+    normalize: true
+    max_seq_length: 384
+    query_prefix: ""
+    doc_prefix: ""
+    parity: ""
+
+  - id: BAAI/bge-small-en-v1.5
+    enum: BgeSmallEnV15
+    revision: ""
+    onnx_path: onnx/model.onnx
+    onnx_sha256: ""
+    dim: 384
+    pooling: cls_token
+    normalize: true
+    max_seq_length: 512
+    query_prefix: "Represent this sentence for searching relevant passages: "
+    doc_prefix: ""
+    parity: ""
+
+  - id: BAAI/bge-base-en-v1.5
+    enum: BgeBaseEnV15
+    revision: ""
+    onnx_path: onnx/model.onnx
+    onnx_sha256: ""
+    dim: 768
+    pooling: cls_token
+    normalize: true
+    max_seq_length: 512
+    query_prefix: "Represent this sentence for searching relevant passages: "
+    doc_prefix: ""
+    parity: ""
+
+  - id: BAAI/bge-large-en-v1.5
+    enum: BgeLargeEnV15
+    revision: ""
+    onnx_path: onnx/model.onnx
+    onnx_sha256: ""
+    dim: 1024
+    pooling: cls_token
+    normalize: true
+    max_seq_length: 512
+    query_prefix: "Represent this sentence for searching relevant passages: "
+    doc_prefix: ""
+    parity: ""
+
+  - id: intfloat/e5-small-v2
+    enum: E5SmallV2
+    revision: ""
+    onnx_path: onnx/model.onnx
+    onnx_sha256: ""
+    dim: 384
+    pooling: mean_tokens
+    normalize: true
+    max_seq_length: 512
+    query_prefix: "query: "
+    doc_prefix: "passage: "
+    parity: ""
+
+  - id: intfloat/e5-base-v2
+    enum: E5BaseV2
+    revision: ""
+    onnx_path: onnx/model.onnx
+    onnx_sha256: ""
+    dim: 768
+    pooling: mean_tokens
+    normalize: true
+    max_seq_length: 512
+    query_prefix: "query: "
+    doc_prefix: "passage: "
+    parity: ""
+
+  - id: intfloat/e5-large-v2
+    enum: E5LargeV2
+    revision: ""
+    onnx_path: onnx/model.onnx
+    onnx_sha256: ""
+    dim: 1024
+    pooling: mean_tokens
+    normalize: true
+    max_seq_length: 512
+    query_prefix: "query: "
+    doc_prefix: "passage: "
+    parity: ""
+
+  - id: intfloat/multilingual-e5-small
+    enum: MultilingualE5Small
+    revision: ""
+    onnx_path: onnx/model.onnx
+    onnx_sha256: ""
+    dim: 384
+    pooling: mean_tokens
+    normalize: true
+    max_seq_length: 512
+    query_prefix: "query: "
+    doc_prefix: "passage: "
+    parity: ""
