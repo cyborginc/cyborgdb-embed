@@ -1,0 +1,202 @@
+// Text embedding numerically equivalent to sentence-transformers.
+
+#ifndef CYBORGDB_EMBED_HPP
+#define CYBORGDB_EMBED_HPP
+
+#include <chrono>
+#include <cstddef>
+#include <memory>
+#include <string>
+#include <string_view>
+#include <vector>
+
+namespace cyborgdb::embed {
+
+// ---------------------------------------------------------------------------
+// Model registry
+// ---------------------------------------------------------------------------
+
+// Generated from registry.yaml. A model reaches this enum only after a parity
+// run has produced a verdict for it.
+enum class ModelId {
+  AllMiniLmL6V2,
+  AllMiniLmL12V2,
+  AllMpnetBaseV2,
+  BgeSmallEnV15,
+  BgeBaseEnV15,
+  BgeLargeEnV15,
+  E5SmallV2,
+  E5BaseV2,
+  E5LargeV2,
+  MultilingualE5Small,
+};
+
+struct ModelInfo {
+  ModelId id;
+  std::string_view name;      // upstream repository, e.g. "BAAI/bge-base-en-v1.5"
+  std::string_view revision;
+  std::size_t dimension;
+
+  // Longest input the model sees; anything beyond it is truncated.
+  std::size_t max_seq_length;
+
+  // Normalized vectors make cosine distance and inner product equivalent,
+  // which decides how an index should be configured.
+  bool normalize;
+};
+
+// Backed by a static table; no allocation, and usable before anything is loaded.
+const ModelInfo* supported_models(std::size_t& count) noexcept;
+const ModelInfo& info(ModelId) noexcept;
+
+// ---------------------------------------------------------------------------
+// Status
+// ---------------------------------------------------------------------------
+
+enum class StatusCode {
+  Ok = 0,
+  InvalidArgument,
+  DownloadFailed,
+  DigestMismatch,     // upstream file no longer matches the pinned digest
+  NotCached,          // offline mode, and the model is absent from the cache
+  ModelLoadFailed,
+  ProviderUnavailable,
+  TokenizerFailed,
+  InferenceFailed,
+  OutputTooSmall,
+  Unavailable,        // built without embedding support
+};
+
+struct Status {
+  StatusCode code = StatusCode::Ok;
+  std::string message;
+
+  bool ok() const noexcept { return code == StatusCode::Ok; }
+  explicit operator bool() const noexcept { return ok(); }
+};
+
+// ---------------------------------------------------------------------------
+// Providers
+// ---------------------------------------------------------------------------
+
+// Every provider is nameable on every platform. An index records the provider
+// that produced its vectors, so a host that cannot run CoreML must still be
+// able to read that tag and say why it cannot serve the index.
+enum class Provider {
+  CPU,
+  CoreML,
+};
+
+bool provider_available(Provider) noexcept;
+
+// ---------------------------------------------------------------------------
+// Embedder
+// ---------------------------------------------------------------------------
+
+struct Options {
+  // Threads within a single call. Parallelism is expected to come from
+  // concurrent callers, which reaches the same throughput on less memory.
+  int threads = 1;
+  Provider provider = Provider::CPU;
+};
+
+// What an index must record to reject vectors it cannot compare against.
+// Dimension alone is insufficient: many models share one.
+struct Identity {
+  std::string_view model;
+  std::string_view revision;
+  std::string_view registry_version;
+  Provider provider;
+};
+
+// A handle onto a shared session. Copies share it, and the session outlives
+// cache eviction until the last handle is gone.
+class Embedder {
+ public:
+  Embedder() noexcept;
+  ~Embedder();
+
+  Embedder(const Embedder&) noexcept;
+  Embedder& operator=(const Embedder&) noexcept;
+  Embedder(Embedder&&) noexcept;
+  Embedder& operator=(Embedder&&) noexcept;
+
+  bool valid() const noexcept;
+  std::size_t dimension() const noexcept;
+  Identity identity() const noexcept;
+
+  // Write n * dimension() floats into out, one row per input.
+  //
+  // Documents and queries are separate calls because models apply asymmetric
+  // prefixes, and a direction flag is easy to pass backwards.
+  //
+  // Safe to call concurrently. Each call writes only to its own out.
+  Status embed_documents(const std::string_view* texts, std::size_t n,
+                         float* out, std::size_t out_capacity) const;
+
+  Status embed_queries(const std::string_view* texts, std::size_t n,
+                       float* out, std::size_t out_capacity) const;
+
+ private:
+  struct Impl;
+  std::shared_ptr<Impl> impl_;
+};
+
+// Downloads and verifies the model if it is not already cached, then loads it.
+// Returns a handle onto the existing session when one matches.
+Status open(ModelId, const Options&, Embedder& out);
+
+// ---------------------------------------------------------------------------
+// Session cache
+// ---------------------------------------------------------------------------
+
+// The cache is process-wide, keyed by model, revision and provider. Scoping it
+// any narrower would hold one copy of the weights per scope, which is the cost
+// this library exists to avoid.
+struct CacheConfig {
+  // Evict by resident bytes, not entry count: models differ by an order of
+  // magnitude in size. Only unreferenced sessions are evicted.
+  std::size_t max_resident_bytes = 0;            // 0 = unbounded
+  std::chrono::seconds idle_ttl{0};              // 0 = no expiry
+
+  std::string cache_dir;                         // empty = per-user default
+  std::string endpoint;                          // empty = upstream default
+
+  // Turn a cache miss into an error instead of a download. Production
+  // deployments want failures at startup, not on a request path.
+  bool offline = false;
+};
+
+// Call before the first open. Defaults come from the environment.
+Status configure_cache(const CacheConfig&);
+
+// Resident memory is dominated by the allocation arena, which grows to the
+// largest batch and sequence seen and does not shrink.
+struct LoadedModel {
+  ModelId model;
+  Provider provider;
+  std::size_t resident_bytes;
+  std::chrono::seconds idle_for;
+  int references;             // 0 means only the cache holds it
+};
+
+struct CacheStats {
+  std::size_t hits;
+  std::size_t misses;
+  std::size_t resident_bytes;
+};
+
+std::vector<LoadedModel> loaded_models();
+CacheStats cache_stats() noexcept;
+
+// Drops the cache's reference. Sessions still held by a caller survive until
+// released.
+Status unload(ModelId, Provider);
+
+// The ONNX Runtime build behind this library. Vectors are only comparable
+// across hosts running the same one, so a health endpoint should report it.
+std::string runtime_version();
+
+}  // namespace cyborgdb::embed
+
+#endif  // CYBORGDB_EMBED_HPP
