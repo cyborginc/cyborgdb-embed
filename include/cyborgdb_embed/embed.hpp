@@ -64,7 +64,6 @@ enum class StatusCode {
   TokenizerFailed,
   InferenceFailed,
   OutputTooSmall,
-  Unavailable,        // built without embedding support
 };
 
 struct Status {
@@ -138,6 +137,8 @@ class Embedder {
                        float* out, std::size_t out_capacity) const;
 
  private:
+  friend Status open(ModelId, const Options&, Embedder&);
+
   struct Impl;
   std::shared_ptr<Impl> impl_;
 };

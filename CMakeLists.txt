@@ -18,7 +18,6 @@ else()
   set(cyborgdb_embed_top_level OFF)
 endif()
 
-option(CYBORGDB_EMBED_WITH_ONNXRUNTIME "Link ONNX Runtime" OFF)
 option(CYBORGDB_EMBED_BUILD_TESTS "Build tests" ${cyborgdb_embed_top_level})
 
 # Hand ONNX Runtime an existing source tree for a dependency it would otherwise
@@ -30,8 +29,10 @@ set(CYBORGDB_EMBED_RE2_SOURCE_DIR         "" CACHE PATH "re2 source for ONNX Run
 set(CYBORGDB_EMBED_PROTOBUF_SOURCE_DIR    "" CACHE PATH "protobuf source for ONNX Runtime")
 
 add_library(cyborgdb_embed STATIC
+  src/cache.cpp
   src/embed.cpp
-  src/ort_api.cpp)
+  src/ort_api.cpp
+  src/session.cpp)
 add_library(cyborgdb::embed ALIAS cyborgdb_embed)
 
 target_include_directories(cyborgdb_embed
@@ -43,8 +44,5 @@ target_include_directories(cyborgdb_embed
 
 target_compile_features(cyborgdb_embed PUBLIC cxx_std_17)
 
-if(CYBORGDB_EMBED_WITH_ONNXRUNTIME)
-  include(cmake/onnxruntime.cmake)
-  target_link_libraries(cyborgdb_embed PRIVATE cyborgdb::onnxruntime)
-  target_compile_definitions(cyborgdb_embed PRIVATE CYBORGDB_EMBED_WITH_ONNXRUNTIME)
-endif()
+include(cmake/onnxruntime.cmake)
+target_link_libraries(cyborgdb_embed PRIVATE cyborgdb::onnxruntime)

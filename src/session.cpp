@@ -22,7 +22,7 @@ Status load_session(const RegistryEntry& entry, Provider provider, int threads,
                 " has no pinned revision or digest; run the registry pin job"};
   }
 
-  return {StatusCode::Unavailable,
+  return {StatusCode::ModelLoadFailed,
           "model loading is not implemented: needs the tokenizer and the "
           "download path"};
 }
