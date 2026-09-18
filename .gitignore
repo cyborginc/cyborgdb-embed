@@ -29,3 +29,10 @@ target/
 tests/data/golden/**/embed-*
 tests/data/golden/**/ort-*
 tests/data/parity-summary.json
+
+# Artifact downloads, keyed by release tag
+.artifacts/
+
+# Locally built archives; the published ones come from a release.
+onnxruntime/prebuilt/
+tokenizer/prebuilt/

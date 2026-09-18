@@ -9,11 +9,7 @@ scripts/*.sh        linguist-vendored
 # Generated code
 src/registry_generated.hpp  linguist-generated
 
-# Prebuilt tokenizer archives, built by scripts/build_tokenizer.sh per platform.
-tokenizer/prebuilt/**/*.a     binary linguist-vendored
-
 # Tests
 tests/**            linguist-vendored
-# Prebuilt ONNX Runtime archives, built by scripts/build_ort.sh per platform.
-onnxruntime/prebuilt/**/*.a   binary linguist-vendored
+# ONNX Runtime headers, copied from the pinned source by scripts/build_ort.sh.
 onnxruntime/include/**        linguist-vendored

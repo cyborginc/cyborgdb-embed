@@ -1,8 +1,8 @@
 # Imports the prebuilt ONNX Runtime archive for this platform.
 #
-# The archives are committed under onnxruntime/prebuilt and built by
-# scripts/build_ort.sh, so consuming projects never build ONNX Runtime — it takes
-# 10 to 20 minutes. Microsoft's own releases cannot be substituted: they are
+# The archives are published as release assets and fetched on demand, so a
+# consumer downloads only the platform it runs on and never builds ONNX Runtime,
+# which takes 10 to 20 minutes. Microsoft's own releases cannot be substituted: they are
 # shared libraries, built without RTTI (which must match the consumer's ABI) and
 # without contrib ops (whose absence breaks linux/arm64), and they are not
 # symbol-isolated. Each archive here exports only the public C API, so ONNX
@@ -21,12 +21,25 @@ else()
   message(FATAL_ERROR "No prebuilt ONNX Runtime for ${CMAKE_SYSTEM_NAME}/${CMAKE_SYSTEM_PROCESSOR}")
 endif()
 
-set(CYBORGDB_EMBED_ORT_LIBRARY
-    "${CMAKE_CURRENT_SOURCE_DIR}/onnxruntime/prebuilt/${_ort_platform}/libonnxruntime.a"
-    CACHE FILEPATH "Prebuilt ONNX Runtime archive")
+include(${CMAKE_CURRENT_LIST_DIR}/artifacts.cmake)
+
+# An explicit path wins over everything: it is how an air-gapped build, or one
+# verifying the binary from source, supplies its own archive.
+set(CYBORGDB_EMBED_ORT_LIBRARY "" CACHE FILEPATH "ONNX Runtime archive to link")
 set(CYBORGDB_EMBED_ORT_INCLUDE_DIR
     "${CMAKE_CURRENT_SOURCE_DIR}/onnxruntime/include"
     CACHE PATH "ONNX Runtime headers")
+
+if(NOT CYBORGDB_EMBED_ORT_LIBRARY AND NOT CYBORGDB_EMBED_BUILD_VENDORED)
+  cyborgdb_embed_fetch_artifact(onnxruntime "${_ort_platform}" "${CYBORGDB_EMBED_ORT_TAG}" _fetched)
+  set(CYBORGDB_EMBED_ORT_LIBRARY "${_fetched}" CACHE FILEPATH "" FORCE)
+endif()
+
+if(CYBORGDB_EMBED_BUILD_VENDORED AND NOT CYBORGDB_EMBED_ORT_LIBRARY)
+  set(CYBORGDB_EMBED_ORT_LIBRARY
+      "${CMAKE_CURRENT_SOURCE_DIR}/.ort/install/lib/libonnxruntime_isolated.a"
+      CACHE FILEPATH "" FORCE)
+endif()
 
 if(NOT EXISTS "${CYBORGDB_EMBED_ORT_LIBRARY}")
   if(CYBORGDB_EMBED_BUILD_VENDORED)
