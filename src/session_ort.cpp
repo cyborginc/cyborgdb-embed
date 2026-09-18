@@ -180,9 +180,6 @@ Status make_ort_session(const RegistryEntry& entry, Provider provider,
     Ort::SessionOptions options;
     options.SetIntraOpNumThreads(threads);
     options.SetGraphOptimizationLevel(ORT_ENABLE_ALL);
-    // The arena otherwise grows to the largest batch and sequence ever seen and
-    // never shrinks, so one long document permanently raises the floor.
-    options.AddConfigEntry("session.use_env_allocators", "0");
 
     Ort::Session session(environment(), graph.c_str(), options);
 

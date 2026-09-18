@@ -61,6 +61,11 @@ if(CYBORGDB_EMBED_BUILD_TESTS)
   add_executable(embed_corpus tests/parity/embed_corpus.cpp)
   target_link_libraries(embed_corpus PRIVATE cyborgdb::embed)
 
+  add_executable(bench tests/bench/bench.cpp)
+  target_link_libraries(bench PRIVATE cyborgdb::embed)
+  find_package(Threads REQUIRED)
+  target_link_libraries(bench PRIVATE Threads::Threads)
+
   add_executable(golden_test tests/golden_test.cpp)
   target_link_libraries(golden_test PRIVATE cyborgdb::embed)
 
