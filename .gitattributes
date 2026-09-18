@@ -8,3 +8,6 @@ scripts/*.sh        linguist-vendored
 
 # Generated code
 src/registry_generated.hpp  linguist-generated
+
+# Prebuilt tokenizer archives, built by scripts/build_tokenizer.sh per platform.
+third_party/tokenizer/**/*.a  binary linguist-vendored

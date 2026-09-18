@@ -20,3 +20,6 @@ PLAN.md
 # Local artifacts
 *.log
 .DS_Store
+
+# Rust builds
+target/
