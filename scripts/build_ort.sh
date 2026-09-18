@@ -93,7 +93,7 @@ build() {
 # Archives fully contained in another are dropped first: a whole-archive partial
 # link rejects the duplicate symbols they would contribute.
 merge() {
-  local out="$INSTALL/lib/onnxruntime_merged.a"
+  local out="$INSTALL/lib/libonnxruntime_merged.a"
   mkdir -p "$INSTALL/lib" "$INSTALL/include"
 
   local archives=()
@@ -133,8 +133,8 @@ merge() {
 # own copies. A partial link resolves ORT's internal references first, which is
 # what makes hiding the rest safe.
 isolate() {
-  local merged="$INSTALL/lib/onnxruntime_merged.a"
-  local out="$INSTALL/lib/onnxruntime_isolated.a"
+  local merged="$INSTALL/lib/libonnxruntime_merged.a"
+  local out="$INSTALL/lib/libonnxruntime_isolated.a"
   local keep="$INSTALL/lib/exported_symbols.txt"
   local object="$BUILD/ort_isolated.o"
 
@@ -176,7 +176,7 @@ EOF
   [[ "$(uname)" == "Darwin" ]] || libs=(-lpthread -ldl -lm -lstdc++)
 
   c++ -std=c++17 -I"$INSTALL/include" "$tmp/smoke.cpp" \
-    "$INSTALL/lib/onnxruntime_merged.a" "${libs[@]}" -o "$tmp/smoke"
+    "$INSTALL/lib/libonnxruntime_merged.a" "${libs[@]}" -o "$tmp/smoke"
   "$tmp/smoke"
   rm -rf "$tmp"
 }

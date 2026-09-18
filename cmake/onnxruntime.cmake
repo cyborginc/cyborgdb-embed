@@ -5,8 +5,10 @@
 set(CYBORGDB_EMBED_ORT_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/.ort/install"
     CACHE PATH "Prefix holding the merged ONNX Runtime archive and headers")
 
+# Prefer the isolated archive: it exports only the public C API, so ONNX
+# Runtime's vendored dependencies cannot collide with the consuming project's.
 find_library(CYBORGDB_EMBED_ORT_LIBRARY
-  NAMES onnxruntime_merged
+  NAMES onnxruntime_isolated onnxruntime_merged
   PATHS "${CYBORGDB_EMBED_ORT_PREFIX}/lib"
   NO_DEFAULT_PATH)
 
