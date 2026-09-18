@@ -13,11 +13,6 @@ Status SessionStore::configure(const CacheConfig& config) {
   return {};
 }
 
-CacheConfig SessionStore::config() const {
-  std::lock_guard<std::mutex> guard(mutex_);
-  return config_;
-}
-
 Status SessionStore::acquire(const RegistryEntry& entry, Provider provider,
                              Precision precision, int threads,
                              std::shared_ptr<Session>& out) {

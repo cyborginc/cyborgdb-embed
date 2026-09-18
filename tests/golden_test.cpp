@@ -126,6 +126,31 @@ int main(int argc, char** argv) {
       continue;
     }
 
+    // A second open of the same model must share the session rather than load
+    // it again, and the identity must describe what produced the vectors.
+    {
+      embed::Embedder second;
+      embed::open(info->id, embed::Options{}, second);
+      const auto live = embed::loaded_models();
+      const bool shared = live.size() == 1 && live[0].handles == 2;
+      if (!shared) {
+        std::printf("%-44s FAIL  second open did not share the session\n", name.c_str());
+        ++failures;
+      }
+      const embed::Identity id = model.identity();
+      if (id.model != info->name || id.revision != info->revision ||
+          id.registry_version.empty()) {
+        std::printf("%-44s FAIL  identity does not describe the session\n", name.c_str());
+        ++failures;
+      }
+      embed::Embedder assigned;
+      assigned = second;
+      if (!assigned.valid() || assigned.dimension() != model.dimension()) {
+        std::printf("%-44s FAIL  assigned handle is unusable\n", name.c_str());
+        ++failures;
+      }
+    }
+
     const std::size_t dim = model.dimension();
     std::vector<float> vectors(views.size() * dim);
 

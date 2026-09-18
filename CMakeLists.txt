@@ -19,6 +19,17 @@ else()
 endif()
 
 option(CYBORGDB_EMBED_BUILD_TESTS "Build tests" ${cyborgdb_embed_top_level})
+option(CYBORGDB_EMBED_COVERAGE "Instrument for coverage" OFF)
+
+if(CYBORGDB_EMBED_COVERAGE)
+  if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    add_compile_options(-fprofile-instr-generate -fcoverage-mapping)
+    add_link_options(-fprofile-instr-generate)
+  else()
+    add_compile_options(--coverage)
+    add_link_options(--coverage)
+  endif()
+endif()
 
 # Hand ONNX Runtime an existing source tree for a dependency it would otherwise
 # vendor at its own pin. Empty means ORT uses its pin, which is what a standalone
@@ -65,6 +76,10 @@ if(CYBORGDB_EMBED_BUILD_TESTS)
   target_link_libraries(bench PRIVATE cyborgdb::embed)
   find_package(Threads REQUIRED)
   target_link_libraries(bench PRIVATE Threads::Threads)
+
+  add_executable(error_test tests/unit/error_test.cpp)
+  target_link_libraries(error_test PRIVATE cyborgdb::embed)
+  add_test(NAME errors COMMAND error_test)
 
   add_executable(golden_test tests/golden_test.cpp)
   target_link_libraries(golden_test PRIVATE cyborgdb::embed)

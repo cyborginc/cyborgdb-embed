@@ -26,7 +26,6 @@ class SessionStore {
   static SessionStore& instance();
 
   Status configure(const CacheConfig&);
-  CacheConfig config() const;
 
   // Concurrent opens of one model load once; the rest wait on that load.
   Status acquire(const RegistryEntry&, Provider, Precision, int threads,

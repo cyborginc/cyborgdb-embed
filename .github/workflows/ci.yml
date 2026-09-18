@@ -56,23 +56,29 @@ jobs:
       # ELF keeps hidden symbols global for static-archive resolution, so this is
       # not something a macOS run can vouch for: the same archives collide on
       # 1,748 strong symbols here and none on Darwin.
+      # Strong overlap must be zero. Weak overlap is expected and safe: those are
+      # identical COMDAT definitions the linker is designed to fold.
       - name: onnxruntime does not collide with a consuming project
         run: |
           mapfile -t deps < <(find .ort/core-deps/lib -name '*.a' | sort -u)
           python3 scripts/symbol_diff.py \
             --a onnxruntime/prebuilt/linux-amd64/libonnxruntime.a \
-            --b "${deps[@]}" --label-a onnxruntime --label-b core-deps
+            --b "${deps[@]}" --label-a onnxruntime --label-b core-deps | tee /tmp/overlap.txt
+          if grep -qE '^[a-z]+ +[0-9]+ +[1-9]' /tmp/overlap.txt; then
+            echo "strong symbol collisions with a consuming project"; exit 1
+          fi
 
-      # Every archive must export its public entry points and nothing else.
-      # Anything more means a vendored runtime reaches a consumer's link.
+      # Strong exports only. Weak symbols are COMDAT template and inline
+      # instantiations that deduplicate safely against a consumer's identical
+      # copies; localizing them discards their groups and breaks the link.
       - name: vendored archives export only their public API
         run: |
           check() {
             local found
             found=$(nm -g --defined-only "$1" 2>/dev/null \
-              | awk '$2 ~ /^[TDBRWV]$/ {print $3}' | sort -u)
+              | awk '$2 ~ /^[TDBR]$/ {print $3}' | sort -u)
             echo "$1: $(echo "$found" | tr '\n' ' ')"
-            [ "$(echo "$found" | wc -l)" -le "$2" ] || { echo "leaks symbols"; exit 1; }
+            [ "$(echo "$found" | wc -l)" -le "$2" ] || { echo "leaks strong symbols"; exit 1; }
           }
           for a in onnxruntime/prebuilt/*/libonnxruntime.a; do check "$a" 2; done
           for a in tokenizer/prebuilt/*/libcyborgdb_tokenizer.a; do check "$a" 3; done

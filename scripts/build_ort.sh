@@ -86,7 +86,6 @@ build() {
     --compile_no_warning_as_error \
     --no_telemetry \
     --disable_ml_ops \
-    --disable_contrib_ops \
     --cmake_extra_defines "${defines[@]}"
 
   # build.py logs failures and still exits 0, so check for output rather than
@@ -171,7 +170,20 @@ isolate() {
     # linker conservatively marks the stack executable and every consumer
     # inherits it. Assert non-executable here rather than leaving it to them.
     ld -r -z noexecstack --whole-archive "$merged" --no-whole-archive -o "$object"
-    objcopy --keep-global-symbols="$keep" "$object"
+
+    # Localize strong symbols only, never weak ones.
+    #
+    # Weak symbols are the COMDAT template and inline instantiations. They
+    # deduplicate safely against a consumer's identical copies, and demoting one
+    # makes the linker discard its group while references stay live — a failure
+    # that appears only when a program reaches that code, not at a smoke link.
+    # The collisions that matter are strong: 1,748 of them against a consuming
+    # project on this platform, and none weak.
+    nm -g --defined-only "$object" \
+      | awk '$2 ~ /^[TDBR]$/ {print $3}' | sort -u > "$BUILD/defined.txt"
+    comm -23 "$BUILD/defined.txt" <(sort -u "$keep") > "$BUILD/localize.txt"
+    echo "  localizing $(wc -l < "$BUILD/localize.txt") strong symbols"
+    objcopy --localize-symbols="$BUILD/localize.txt" "$object"
   fi
 
   [[ -f "$object" ]] || { echo "partial link produced no object" >&2; exit 1; }
@@ -191,12 +203,31 @@ verify() {
 int main() {
   const OrtApiBase* base = OrtGetApiBase();
   if (base == nullptr) return 1;
+  const OrtApi* api = base->GetApi(ORT_API_VERSION);
+  if (api == nullptr) return 1;
+
+  OrtEnv* env = nullptr;
+  if (api->CreateEnv(ORT_LOGGING_LEVEL_WARNING, "verify", &env) != nullptr) return 1;
+  OrtSessionOptions* options = nullptr;
+  if (api->CreateSessionOptions(&options) != nullptr) return 1;
+
+  // Deliberately loads a file that is not a graph: the failure path still pulls
+  // in protobuf parsing and the logger, which a version query does not.
+  OrtSession* session = nullptr;
+  OrtStatus* status = api->CreateSession(env, "/nonexistent.onnx", options, &session);
+  if (status != nullptr) api->ReleaseStatus(status);
+
+  api->ReleaseSessionOptions(options);
+  api->ReleaseEnv(env);
   std::printf("%s\n", base->GetVersionString());
-  return base->GetApi(ORT_API_VERSION) != nullptr ? 0 : 1;
+  return 0;
 }
 EOF
   local libs=(-framework Foundation -framework Accelerate)
   [[ "$(uname)" == "Darwin" ]] || libs=(-lpthread -ldl -lm -lstdc++)
+
+  # Loading a graph reaches protobuf, the logger and the session machinery. A
+  # program that only asks for the API version links even when those are broken.
 
   c++ -std=c++17 -I"$INSTALL/include" "$tmp/smoke.cpp" \
     "$INSTALL/lib/libonnxruntime_merged.a" "${libs[@]}" -o "$tmp/smoke"
@@ -212,13 +243,20 @@ vendor() {
      "$VENDOR/prebuilt/$PLATFORM/libonnxruntime.a"
   cp "$INSTALL"/include/*.h "$VENDOR/include/"
 
-  local exported
-  exported="$(nm -g --defined-only "$VENDOR/prebuilt/$PLATFORM/libonnxruntime.a" 2>/dev/null \
-    | awk '$2 ~ /^[TDBRWVS]$/ {print $3}' | sed 's/^_//' | sort -u)"
-  echo "$VENDOR/prebuilt/$PLATFORM/libonnxruntime.a: $(wc -c < "$VENDOR/prebuilt/$PLATFORM/libonnxruntime.a") bytes"
-  printf '  %s\n' $exported
-  [[ "$(echo "$exported" | wc -l | tr -d ' ')" -le 2 ]] || {
-    echo "archive exports more than the public C API" >&2; exit 1; }
+  # Only strong exports are checked. Weak symbols are COMDAT template and inline
+  # instantiations, which deduplicate safely against a consumer's identical
+  # copies; localizing them discards their groups and breaks the link. The
+  # collisions that matter are strong.
+  local archive="$VENDOR/prebuilt/$PLATFORM/libonnxruntime.a"
+  local strong weak
+  strong="$(nm -g --defined-only "$archive" 2>/dev/null \
+    | awk '$2 ~ /^[TDBR]$/ {print $3}' | sed 's/^_//' | sort -u)"
+  weak="$(nm -g --defined-only "$archive" 2>/dev/null \
+    | awk '$2 ~ /^[WVS]$/' | wc -l | tr -d ' ')"
+  echo "$archive: $(wc -c < "$archive") bytes, $weak weak"
+  printf '  %s\n' $strong
+  [[ "$(echo "$strong" | wc -l | tr -d ' ')" -le 2 ]] || {
+    echo "archive exports strong symbols beyond the public C API" >&2; exit 1; }
 }
 
 case "$PHASE" in

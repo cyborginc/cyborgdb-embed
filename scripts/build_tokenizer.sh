@@ -80,11 +80,12 @@ isolate() {
   rm -f "$out"
   ar rcs "$out" "$object"
 
-  # Count every exported symbol, not just the expected ones: the failure that
-  # matters is the Rust runtime leaking out alongside them.
+  # Count strong exports, not every symbol: weak ones are COMDAT instantiations
+  # that deduplicate safely, and the failure that matters is the Rust runtime
+  # leaking out as strong definitions.
   local found
   found="$(nm -g --defined-only "$out" 2>/dev/null \
-    | awk '$2 ~ /^[TDBRWVS]$/ {print $3}' | sed 's/^_//' | sort -u)"
+    | awk '$2 ~ /^[TDBR]$/ {print $3}' | sed 's/^_//' | sort -u)"
   echo "$out: $(wc -c < "$out") bytes"
   printf '  %s\n' $found
   [[ "$(echo "$found" | wc -l | tr -d ' ')" == "${#EXPORTS[@]}" ]] || {
