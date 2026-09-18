@@ -26,17 +26,28 @@ ONNX Runtime is built from pinned source and linked statically. There is no shar
 ## Use
 
 ```cpp
-#include <cyborgdb/embed.hpp>
+#include <cyborgdb_embed/embed.hpp>
 
-auto model = cyborgdb::embed::open("BAAI/bge-base-en-v1.5", {.intra_op_threads = 1});
+namespace embed = cyborgdb::embed;
 
-cyborgdb::embed::embed_documents(*model, docs, out);
-cyborgdb::embed::embed_queries(*model, queries, out);
+embed::Embedder model;
+if (auto s = embed::open(embed::ModelId::BgeBaseEnV15, embed::Options{}, model); !s) {
+  return s;  // unknown model, download failed, digest mismatch, load failed
+}
+
+std::vector<std::string_view> docs = {"first passage", "second passage"};
+std::vector<float> out(docs.size() * model.dimension());
+
+model.embed_documents(docs.data(), docs.size(), out.data(), out.size());
 ```
+
+Models are named by an enum rather than a string, so a typo is a compile error and the supported set is visible to every binding.
 
 Documents and queries are separate calls because several models expect asymmetric prefixes — e5 wants `query: ` / `passage: `, bge wants an instruction prefix on queries. Applying the wrong one degrades retrieval without erroring, so the API does not let you pass a flag and get it backwards.
 
-`open` returns a refcounted handle onto a cached session. `Model` is safe to use from many threads; each caller writes into its own output buffer.
+Every entry point returns a status. A tokenizer failure, a failed download, a digest that no longer matches, and an undersized output buffer are all reachable, and none of them should surface as a plausible-looking vector.
+
+The session cache is process-wide, so opening one model from many indexes holds a single copy of the weights. An `Embedder` is a handle onto that session: copies share it, and it is safe to use from many threads because each call writes only into its own output buffer.
 
 ## Supported models
 
@@ -140,8 +151,10 @@ make export MODEL=  # re-export a pooled ONNX graph
 make bench          # latency, concurrency, memory
 ```
 
+Adding a model means editing `registry.yaml` and regenerating, which needs PyYAML (`pip install -r scripts/requirements.txt`). Building the library does not: `src/registry_generated.hpp` is committed, so no Python is required to compile.
+
 See [SPEC.md](SPEC.md) for design rationale, the session cache design, required ONNX Runtime build flags, and known pitfalls.
 
 ## License
 
-<!-- TODO -->
+MIT. See [LICENSE](LICENSE).
