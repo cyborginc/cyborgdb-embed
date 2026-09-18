@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-#include "cache.hpp"
+#include "session_store.hpp"
 #include "ort_api.hpp"
 #include "registry_generated.hpp"
 #include "session.hpp"
@@ -114,7 +114,7 @@ Status open(ModelId id, const Options& options, Embedder& out) {
   }
 
   std::shared_ptr<detail::Session> session;
-  if (Status status = detail::SessionCache::instance().acquire(
+  if (Status status = detail::SessionStore::instance().acquire(
           *entry, options.provider, options.precision, options.threads, session);
       !status) {
     return status;
@@ -131,19 +131,13 @@ Status open(ModelId id, const Options& options, Embedder& out) {
 // ---------------------------------------------------------------------------
 
 Status configure_cache(const CacheConfig& config) {
-  return detail::SessionCache::instance().configure(config);
+  return detail::SessionStore::instance().configure(config);
 }
 
 std::vector<LoadedModel> loaded_models() {
-  return detail::SessionCache::instance().loaded();
+  return detail::SessionStore::instance().loaded();
 }
 
-CacheStats cache_stats() noexcept {
-  return detail::SessionCache::instance().stats();
-}
-
-Status unload(ModelId id, Provider provider, Precision precision) {
-  return detail::SessionCache::instance().drop(id, provider, precision);
-}
+LoadStats load_stats() noexcept { return detail::SessionStore::instance().stats(); }
 
 }  // namespace cyborgdb::embed

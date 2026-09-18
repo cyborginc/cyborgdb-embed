@@ -22,10 +22,6 @@ class Session {
   const RegistryEntry* entry = nullptr;
   Provider provider = Provider::CPU;
   Precision precision = Precision::Fp32;
-
-  // Weights plus the allocation arena, which grows to the largest batch and
-  // sequence seen and does not shrink.
-  std::size_t resident_bytes = 0;
 };
 
 // Resolves the model, verifies it, and loads it. Blocking: downloads on a cold

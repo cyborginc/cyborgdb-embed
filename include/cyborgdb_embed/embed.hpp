@@ -3,7 +3,6 @@
 #ifndef CYBORGDB_EMBED_HPP
 #define CYBORGDB_EMBED_HPP
 
-#include <chrono>
 #include <cstddef>
 #include <memory>
 #include <string>
@@ -165,20 +164,13 @@ class Embedder {
 Status open(ModelId, const Options&, Embedder& out);
 
 // ---------------------------------------------------------------------------
-// Session cache
+// Download cache
 // ---------------------------------------------------------------------------
 
-// The cache is process-wide, keyed by model, revision and provider. Scoping it
-// any narrower would hold one copy of the weights per scope, which is the cost
-// this library exists to avoid.
+// Where model files live on disk, and whether they may be fetched.
 struct CacheConfig {
-  // Evict by resident bytes, not entry count: models differ by an order of
-  // magnitude in size. Only unreferenced sessions are evicted.
-  std::size_t max_resident_bytes = 0;            // 0 = unbounded
-  std::chrono::seconds idle_ttl{0};              // 0 = no expiry
-
-  std::string cache_dir;                         // empty = per-user default
-  std::string endpoint;                          // empty = upstream default
+  std::string cache_dir;      // empty = per-user default
+  std::string endpoint;       // empty = upstream default
 
   // Turn a cache miss into an error instead of a download. Production
   // deployments want failures at startup, not on a request path.
@@ -188,29 +180,30 @@ struct CacheConfig {
 // Call before the first open. Defaults come from the environment.
 Status configure_cache(const CacheConfig&);
 
-// Resident memory is dominated by the allocation arena, which grows to the
-// largest batch and sequence seen and does not shrink.
+// ---------------------------------------------------------------------------
+// Loaded models
+// ---------------------------------------------------------------------------
+
+// A session lives exactly as long as some Embedder holds it. Opening the same
+// model twice shares one session; releasing the last handle frees the weights.
+// There is no retention beyond use, so memory is a function of what is open
+// rather than of an eviction policy.
 struct LoadedModel {
   ModelId model;
   Provider provider;
   Precision precision;
-  std::size_t resident_bytes;
-  std::chrono::seconds idle_for;
-  int references;             // 0 means only the cache holds it
+  // Distinct successful opens still outstanding. Copying an Embedder does not
+  // add one: copies share a handle.
+  int handles;
 };
 
-struct CacheStats {
-  std::size_t hits;
-  std::size_t misses;
-  std::size_t resident_bytes;
+struct LoadStats {
+  std::size_t shared;         // opens that reused a live session
+  std::size_t loaded;         // opens that had to build one
 };
 
 std::vector<LoadedModel> loaded_models();
-CacheStats cache_stats() noexcept;
-
-// Drops the cache's reference. Sessions still held by a caller survive until
-// released.
-Status unload(ModelId, Provider, Precision = Precision::Fp32);
+LoadStats load_stats() noexcept;
 
 // The ONNX Runtime build behind this library. Vectors are only comparable
 // across hosts running the same one, so a health endpoint should report it.

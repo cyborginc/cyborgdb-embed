@@ -32,7 +32,7 @@ find_package(CURL REQUIRED)
 find_package(OpenSSL REQUIRED)
 
 add_library(cyborgdb_embed STATIC
-  src/cache.cpp
+  src/session_store.cpp
   src/resolve.cpp
   src/embed.cpp
   src/ort_api.cpp
