@@ -17,7 +17,7 @@ CRATE="$ROOT/tokenizer"
 export CARGO_TARGET_DIR="${CARGO_TARGET_DIR:-$ROOT/tokenizer/target}"
 # Prebuilt archives are committed per platform so consumers never need cargo.
 PLATFORM="${TOKENIZER_PLATFORM:-$(uname -s | tr 'A-Z' 'a-z')-$(uname -m | sed 's/x86_64/amd64/; s/aarch64/arm64/')}"
-VENDOR="${TOKENIZER_VENDOR_DIR:-$ROOT/third_party/tokenizer/$PLATFORM}"
+VENDOR="${TOKENIZER_VENDOR_DIR:-$ROOT/tokenizer/prebuilt/$PLATFORM}"
 PHASE="${1:-all}"
 
 EXPORTS=(cyborgdb_tokenizer_new cyborgdb_tokenizer_free cyborgdb_tokenizer_encode)

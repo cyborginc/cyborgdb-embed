@@ -62,7 +62,7 @@ jobs:
       # the Rust runtime reaches a consumer's link.
       - name: verify exported surface
         run: |
-          A=third_party/tokenizer/${{ matrix.platform }}/libcyborgdb_tokenizer.a
+          A=tokenizer/prebuilt/${{ matrix.platform }}/libcyborgdb_tokenizer.a
           if [ "$RUNNER_OS" = "macOS" ]; then
             found=$(nm -m "$A" | grep " external " | grep -v "non-external\|private external\|(undefined)" | awk '{print $NF}' | sort -u)
           else
@@ -74,7 +74,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: tokenizer-${{ matrix.platform }}
-          path: third_party/tokenizer/${{ matrix.platform }}/
+          path: tokenizer/prebuilt/${{ matrix.platform }}/
 
   propose:
     needs: [check, build]
@@ -84,7 +84,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           pattern: tokenizer-*
-          path: third_party/tokenizer/
+          path: tokenizer/prebuilt/
       - run: |
           sed -i -E 's/(tokenizers = \{ version = ")[^"]+/\1${{ needs.check.outputs.latest }}/' tokenizer/Cargo.toml
       - uses: peter-evans/create-pull-request@v6
@@ -100,4 +100,4 @@ jobs:
             merging, since a tokenization change moves every vector.
           add-paths: |
             tokenizer/Cargo.toml
-            third_party/tokenizer/
+            tokenizer/prebuilt/

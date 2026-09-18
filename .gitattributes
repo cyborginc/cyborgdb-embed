@@ -1,5 +1,5 @@
 # Build tooling
-docker/**           linguist-vendored
+scripts/docker/**   linguist-vendored
 cmake/**            linguist-vendored
 CMakeLists.txt      linguist-vendored
 *.cmake             linguist-vendored
@@ -10,4 +10,4 @@ scripts/*.sh        linguist-vendored
 src/registry_generated.hpp  linguist-generated
 
 # Prebuilt tokenizer archives, built by scripts/build_tokenizer.sh per platform.
-third_party/tokenizer/**/*.a  binary linguist-vendored
+tokenizer/prebuilt/**/*.a     binary linguist-vendored

@@ -1,6 +1,6 @@
 # Imports the prebuilt tokenizer archive for this platform.
 #
-# The archives are committed under third_party/tokenizer and built by
+# The archives are committed under tokenizer/prebuilt and built by
 # scripts/build_tokenizer.sh, so consuming projects never need a Rust toolchain.
 # Each exports only the three C entry points; the Rust runtime is localised out.
 
@@ -17,7 +17,7 @@ else()
 endif()
 
 set(CYBORGDB_EMBED_TOKENIZER_LIBRARY
-    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/tokenizer/${_tokenizer_platform}/libcyborgdb_tokenizer.a"
+    "${CMAKE_CURRENT_SOURCE_DIR}/tokenizer/prebuilt/${_tokenizer_platform}/libcyborgdb_tokenizer.a"
     CACHE FILEPATH "Prebuilt tokenizer archive")
 
 if(NOT EXISTS "${CYBORGDB_EMBED_TOKENIZER_LIBRARY}")
