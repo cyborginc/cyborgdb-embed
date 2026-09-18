@@ -1,0 +1,222 @@
+{
+  "sentence-transformers/all-MiniLM-L6-v2": {
+    "ort-document": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998807907104
+    },
+    "ort-query": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998807907104
+    },
+    "embed-document": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998807907104
+    },
+    "embed-query": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998807907104
+    }
+  },
+  "sentence-transformers/all-MiniLM-L12-v2": {
+    "ort-document": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998807907104
+    },
+    "ort-query": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998807907104
+    },
+    "embed-document": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998807907104
+    },
+    "embed-query": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998807907104
+    }
+  },
+  "sentence-transformers/all-mpnet-base-v2": {
+    "ort-document": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998807907104
+    },
+    "ort-query": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998807907104
+    },
+    "embed-document": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998807907104
+    },
+    "embed-query": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998807907104
+    }
+  },
+  "BAAI/bge-small-en-v1.5": {
+    "ort-document": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998807907104
+    },
+    "ort-query": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998807907104
+    },
+    "embed-document": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998807907104
+    },
+    "embed-query": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998807907104
+    }
+  },
+  "BAAI/bge-base-en-v1.5": {
+    "ort-document": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998807907104
+    },
+    "ort-query": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998807907104
+    },
+    "embed-document": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998807907104
+    },
+    "embed-query": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999997615814209
+    }
+  },
+  "BAAI/bge-large-en-v1.5": {
+    "ort-document": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998807907104
+    },
+    "ort-query": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998807907104
+    },
+    "embed-document": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998807907104
+    },
+    "embed-query": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998807907104
+    }
+  },
+  "intfloat/e5-small-v2": {
+    "ort-document": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998807907104
+    },
+    "ort-query": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998807907104
+    },
+    "embed-document": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998807907104
+    },
+    "embed-query": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998807907104
+    }
+  },
+  "intfloat/e5-base-v2": {
+    "ort-document": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998807907104
+    },
+    "ort-query": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998807907104
+    },
+    "embed-document": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998807907104
+    },
+    "embed-query": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998807907104
+    }
+  },
+  "intfloat/e5-large-v2": {
+    "ort-document": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998807907104
+    },
+    "ort-query": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998807907104
+    },
+    "embed-document": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998807907104
+    },
+    "embed-query": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998807907104
+    }
+  },
+  "intfloat/multilingual-e5-small": {
+    "ort-document": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "close-but-drifting",
+      "cosine_min_real": 0.9999998807907104
+    },
+    "ort-query": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "close-but-drifting",
+      "cosine_min_real": 0.9999998807907104
+    },
+    "embed-document": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "close-but-drifting",
+      "cosine_min_real": 0.9999998807907104
+    },
+    "embed-query": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "close-but-drifting",
+      "cosine_min_real": 0.9999998807907104
+    }
+  }
+}

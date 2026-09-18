@@ -6,10 +6,10 @@ import pathlib
 import numpy as np
 import yaml
 
-ROOT = pathlib.Path(__file__).resolve().parent.parent
-CORPUS = ROOT / "testdata" / "corpus.jsonl"
+ROOT = pathlib.Path(__file__).resolve().parent.parent.parent
+CORPUS = ROOT / "tests" / "data" / "corpus.jsonl"
 REGISTRY = ROOT / "registry.yaml"
-GOLDEN = ROOT / "testdata" / "golden"
+GOLDEN = ROOT / "tests" / "data" / "golden"
 
 
 def corpus():

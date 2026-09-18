@@ -54,3 +54,18 @@ include(cmake/onnxruntime.cmake)
 include(cmake/tokenizer.cmake)
 target_link_libraries(cyborgdb_embed
   PRIVATE cyborgdb::onnxruntime cyborgdb::tokenizer CURL::libcurl OpenSSL::Crypto)
+
+# Embeds the frozen corpus so the parity harness can score the library against
+# sentence-transformers. Built with the tests, not part of the library.
+if(CYBORGDB_EMBED_BUILD_TESTS)
+  add_executable(embed_corpus tests/parity/embed_corpus.cpp)
+  target_link_libraries(embed_corpus PRIVATE cyborgdb::embed)
+
+  add_executable(golden_test tests/golden_test.cpp)
+  target_link_libraries(golden_test PRIVATE cyborgdb::embed)
+
+  enable_testing()
+  add_test(NAME golden
+           COMMAND golden_test "${CMAKE_CURRENT_SOURCE_DIR}/tests/data"
+                   BAAI/bge-small-en-v1.5 intfloat/e5-small-v2)
+endif()

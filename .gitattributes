@@ -13,4 +13,4 @@ src/registry_generated.hpp  linguist-generated
 tokenizer/prebuilt/**/*.a     binary linguist-vendored
 
 # Tests
-parity/             linguist-vendored
+tests/**            linguist-vendored
