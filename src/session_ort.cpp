@@ -1,5 +1,7 @@
 #include <algorithm>
+#include <cstdlib>
 #include <cmath>
+#include <string>
 #include <vector>
 
 #include "ort_api.hpp"
@@ -16,7 +18,12 @@ Ort::Env& environment() {
   return env;
 }
 
-constexpr std::size_t kBatch = 32;
+// Activation memory scales with rows x padded width, not rows, so batches are
+// formed against a token budget rather than a fixed count. Without this a batch
+// of long texts costs an order of magnitude more than the same count of short
+// ones, and peak resident memory is set by whichever batch happened to be widest.
+constexpr std::size_t kMaxBatchTokens = 8192;
+constexpr std::size_t kMaxBatchRows = 64;
 
 void pool(const float* hidden, const std::int64_t* mask, std::size_t rows,
           std::size_t width, std::size_t dim, Pooling mode, float* out) {
@@ -102,20 +109,40 @@ Status OrtSession::encode(const std::string_view* texts, std::size_t n,
   }
 
   const auto memory = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
-  std::vector<std::uint32_t> ids;
 
-  for (std::size_t start = 0; start < n; start += kBatch) {
-    const std::size_t rows = std::min(kBatch, n - start);
+  // Tokenise everything first, then group similar lengths together. A batch is
+  // padded to its longest member, so one long text in a batch of short ones
+  // inflates every row and costs memory proportional to the longest. Grouping by
+  // length is output-equivalent: padded positions are masked out of attention
+  // and excluded from pooling.
+  std::vector<std::vector<std::uint32_t>> tokens(n);
+  std::vector<std::size_t> order(n);
+  for (std::size_t i = 0; i < n; ++i) {
+    if (Status status = tokenizer_->encode(texts[i], prefix, tokens[i]); !status) {
+      return status;
+    }
+    order[i] = i;
+  }
+  std::stable_sort(order.begin(), order.end(), [&](std::size_t a, std::size_t b) {
+    return tokens[a].size() < tokens[b].size();
+  });
+
+  for (std::size_t start = 0; start < n;) {
+    // Sorted order means width grows slowly, so the budget admits many short
+    // rows and few long ones.
+    std::size_t rows = 0;
+    std::size_t width = 1;
+    while (start + rows < n && rows < kMaxBatchRows) {
+      const std::size_t candidate =
+          std::max(width, tokens[order[start + rows]].size());
+      if (rows > 0 && (rows + 1) * candidate > kMaxBatchTokens) break;
+      width = candidate;
+      ++rows;
+    }
 
     std::vector<std::vector<std::uint32_t>> encoded(rows);
-    std::size_t width = 1;
     for (std::size_t r = 0; r < rows; ++r) {
-      if (Status status = tokenizer_->encode(texts[start + r], prefix, ids);
-          !status) {
-        return status;
-      }
-      encoded[r] = ids;
-      width = std::max(width, ids.size());
+      encoded[r] = tokens[order[start + r]];
     }
 
     // Pad to the batch, never to a fixed length: a fixed strategy costs an order
@@ -154,11 +181,15 @@ Status OrtSession::encode(const std::string_view* texts, std::size_t n,
     }
 
     const float* hidden = result[0].GetTensorData<float>();
-    float* destination = out + start * dim;
-    pool(hidden, mask.data(), rows, width, dim, entry->pooling, destination);
+    std::vector<float> pooled(rows * dim);
+    pool(hidden, mask.data(), rows, width, dim, entry->pooling, pooled.data());
     if (entry->info.normalize) {
-      l2_normalize(destination, rows, dim);
+      l2_normalize(pooled.data(), rows, dim);
     }
+    for (std::size_t r = 0; r < rows; ++r) {
+      std::copy_n(pooled.data() + r * dim, dim, out + order[start + r] * dim);
+    }
+    start += rows;
   }
   return {};
 }
