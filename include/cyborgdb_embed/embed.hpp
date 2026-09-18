@@ -78,12 +78,9 @@ struct Status {
 // Providers
 // ---------------------------------------------------------------------------
 
-// Every provider is nameable on every platform. An index records the provider
-// that produced its vectors, so a host that cannot run CoreML must still be
-// able to read that tag and say why it cannot serve the index.
+// CoreML and CUDA mayb be added later
 enum class Provider {
   CPU,
-  CoreML,
 };
 
 bool provider_available(Provider) noexcept;

@@ -208,11 +208,15 @@ Status make_ort_session(const RegistryEntry& entry, Provider provider,
   }
 
   try {
+    // Construct the environment first: it registers the default logger, and
+    // appending a provider uses it.
+    Ort::Env& env = environment();
+
     Ort::SessionOptions options;
     options.SetIntraOpNumThreads(threads);
     options.SetGraphOptimizationLevel(ORT_ENABLE_ALL);
 
-    Ort::Session session(environment(), graph.c_str(), options);
+    Ort::Session session(env, graph.c_str(), options);
 
     bool needs_token_type_ids = false;
     Ort::AllocatorWithDefaultOptions allocator;

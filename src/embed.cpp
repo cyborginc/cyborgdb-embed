@@ -39,17 +39,7 @@ const ModelInfo& info(ModelId id) noexcept {
 // ---------------------------------------------------------------------------
 
 bool provider_available(Provider provider) noexcept {
-  switch (provider) {
-    case Provider::CPU:
-      return true;
-    case Provider::CoreML:
-#if defined(__APPLE__) && defined(CYBORGDB_EMBED_WITH_COREML)
-      return true;
-#else
-      return false;
-#endif
-  }
-  return false;
+  return provider == Provider::CPU;
 }
 
 std::string runtime_version() { return detail::ort_version(); }

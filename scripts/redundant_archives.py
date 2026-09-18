@@ -12,10 +12,17 @@ import subprocess
 import sys
 
 
+# Archive symbol tables listed as members: "/" and "//" from GNU ar, "__.SYMDEF"
+# from BSD ar. They differ between archives by construction, so treating them as
+# content makes every comparison fail.
+INDEX_MEMBERS = ("/", "//", "__.SYMDEF", "__.SYMDEF SORTED")
+
+
 def members(archive):
-    """Member names, without the index entries and trailing slashes GNU ar emits."""
+    """Member names, without archive index entries or GNU ar's trailing slashes."""
     out = subprocess.run(["ar", "t", archive], capture_output=True, text=True).stdout
-    return {line.rstrip("/") for line in out.split() if line not in ("/", "//")}
+    return {line.rstrip("/") for line in out.splitlines()
+            if line.strip() and line not in INDEX_MEMBERS}
 
 
 def digest(archive, member):
