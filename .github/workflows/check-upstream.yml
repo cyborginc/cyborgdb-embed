@@ -1,0 +1,94 @@
+# Watches the upstream projects whose versions are pinned here and opens a pull
+# request when one moves.
+#
+# It only bumps the pin. Publishing archives is a separate, deliberate step:
+# push the component's tag once the pin is merged, and release-artifacts.yml
+# builds and uploads. Keeping those apart means a new upstream version never
+# reaches anyone without someone choosing to release it, and the parity suite
+# gets a chance to run first — a tokenizers release can legitimately change
+# tokenisation, which moves every vector.
+name: check-upstream
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  onnxruntime:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - id: versions
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          current=$(sed -n 's/^ORT_VERSION="${ORT_VERSION:-\(.*\)}"$/\1/p' scripts/build_ort.sh)
+          latest=$(gh release list --repo microsoft/onnxruntime --limit 20 --json tagName \
+            --jq '[.[] | select(.tagName | test("^v[0-9]+\\.[0-9]+\\.[0-9]+$"))][0].tagName')
+          echo "current=$current latest=$latest"
+          echo "current=$current" >> "$GITHUB_OUTPUT"
+          echo "latest=$latest" >> "$GITHUB_OUTPUT"
+
+      - if: steps.versions.outputs.latest != steps.versions.outputs.current
+        run: |
+          sed -i 's|ORT_VERSION="${ORT_VERSION:-.*}"|ORT_VERSION="${ORT_VERSION:-${{ steps.versions.outputs.latest }}}"|' \
+            scripts/build_ort.sh
+
+      - if: steps.versions.outputs.latest != steps.versions.outputs.current
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: ort-${{ steps.versions.outputs.latest }}
+          title: "Pin ONNX Runtime ${{ steps.versions.outputs.latest }}"
+          body: |
+            ONNX Runtime moved from ${{ steps.versions.outputs.current }} to
+            ${{ steps.versions.outputs.latest }}.
+
+            This only changes the pin. Nothing is published until an
+            `ort-<version>-<build>` tag is pushed, and the release workflow
+            refuses a tag whose version disagrees with this pin.
+
+            Before releasing: the build flags are load-bearing and have broken on
+            version changes before — `--disable_contrib_ops` breaks linux/arm64,
+            and symbol isolation has to keep working on both object formats.
+          add-paths: scripts/build_ort.sh
+
+  tokenizers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - id: versions
+        run: |
+          current=$(sed -n 's/.*tokenizers = { version = "\([^"]*\)".*/\1/p' tokenizer/Cargo.toml)
+          latest=$(curl -sS -H "User-Agent: cyborgdb-embed" \
+            https://crates.io/api/v1/crates/tokenizers \
+            | python3 -c 'import json,sys; print(json.load(sys.stdin)["crate"]["max_stable_version"])')
+          echo "current=$current latest=$latest"
+          echo "current=$current" >> "$GITHUB_OUTPUT"
+          echo "latest=$latest" >> "$GITHUB_OUTPUT"
+
+      - if: steps.versions.outputs.latest != steps.versions.outputs.current
+        run: |
+          sed -i 's|tokenizers = { version = "[^"]*"|tokenizers = { version = "${{ steps.versions.outputs.latest }}"|' \
+            tokenizer/Cargo.toml
+
+      - if: steps.versions.outputs.latest != steps.versions.outputs.current
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: tokenizers-${{ steps.versions.outputs.latest }}
+          title: "Pin tokenizers ${{ steps.versions.outputs.latest }}"
+          body: |
+            tokenizers moved from ${{ steps.versions.outputs.current }} to
+            ${{ steps.versions.outputs.latest }}.
+
+            This only changes the pin. Nothing is published until a
+            `tokenizers-<version>-<build>` tag is pushed.
+
+            **Run the parity suite before releasing.** A tokenizers release can
+            change tokenisation, and that moves every vector — the symbol checks
+            in the release workflow cannot see it.
+          add-paths: tokenizer/Cargo.toml

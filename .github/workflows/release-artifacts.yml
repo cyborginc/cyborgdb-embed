@@ -39,6 +39,24 @@ jobs:
       - if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y libcurl4-openssl-dev libssl-dev
 
+      # The tag names a version but does not select one: the pin in the build
+      # script and Cargo.toml decides what is fetched, so that a local build
+      # produces the same archive as a release. They must therefore agree, or a
+      # tag would publish something other than what it claims.
+      - name: tag matches the pinned upstream version
+        run: |
+          tag="${{ github.ref_name }}"
+          if [[ "$tag" == ort-* ]]; then
+            want="${tag#ort-}"; want="${want%-*}"
+            have=$(sed -n 's/^ORT_VERSION="${ORT_VERSION:-v\(.*\)}"$/\1/p' scripts/build_ort.sh)
+          else
+            want="${tag#tokenizers-}"; want="${want%-*}"
+            have=$(sed -n 's/.*tokenizers = { version = "\([^"]*\)".*/\1/p' tokenizer/Cargo.toml)
+          fi
+          echo "tag says $want, pin says $have"
+          [ "$want" = "$have" ] || {
+            echo "tag and pin disagree; bump the pin or retag"; exit 1; }
+
       - name: build
         run: |
           if [[ "${{ github.ref_name }}" == ort-* ]]; then
