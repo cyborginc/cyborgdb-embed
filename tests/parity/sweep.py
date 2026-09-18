@@ -9,6 +9,7 @@ registry: a model's parity verdict is generated, never hand-written.
 import argparse
 import json
 import pathlib
+import re
 import subprocess
 import sys
 
@@ -29,6 +30,34 @@ def corpus_blob(path):
     path.write_bytes(b"".join(t.encode() + b"\0" for t in texts))
 
 
+def write_verdicts(summary):
+    """Record each model's verdict in the registry.
+
+    The library's own arm carries it, scored on real prose. Verdicts are
+    generated rather than written by hand: one that drifts from what was
+    measured is worse than none, because it is the field that decides whether a
+    model may ship.
+    """
+    lines = common.REGISTRY.read_text().splitlines(keepends=True)
+    current = None
+    written = 0
+    for index, line in enumerate(lines):
+        match = re.match(r"\s*-\s*id:\s*(\S+)", line)
+        if match:
+            current = match.group(1)
+            continue
+        if current and re.match(r"\s*parity:", line):
+            results = summary.get(current) or {}
+            verdicts = {v.get("verdict_real") for k, v in results.items()
+                        if k.startswith("embed-") and isinstance(v, dict)}
+            # Document and query must agree; a split verdict is not a verdict.
+            value = verdicts.pop() if len(verdicts) == 1 else ""
+            lines[index] = re.sub(r'"[^"]*"', f'"{value}"', line, count=1)
+            written += 1 if value else 0
+    common.REGISTRY.write_text("".join(lines))
+    print(f"wrote {written} verdicts into registry.yaml")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--models", nargs="*", help="registry ids; default all")
@@ -39,6 +68,8 @@ def main():
     parser.add_argument("--embed-corpus", default=str(common.ROOT / "build" / "embed_corpus"))
     parser.add_argument("--skip-reference", action="store_true",
                         help="reuse committed reference vectors")
+    parser.add_argument("--no-write-back", action="store_true",
+                        help="leave registry.yaml alone")
     args = parser.parse_args()
 
     blob = pathlib.Path("/tmp/cyborgdb-embed-corpus.bin")
@@ -97,6 +128,9 @@ def main():
 
     (common.ROOT / "tests" / "data" / "parity-summary.json").write_text(
         json.dumps(summary, indent=2) + "\n")
+
+    if not args.no_write_back:
+        write_verdicts(summary)
     print(f"\nwrote tests/data/parity-summary.json ({len(summary)} models)")
     return 0
 

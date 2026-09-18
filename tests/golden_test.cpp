@@ -87,12 +87,12 @@ Score score(const std::vector<float>& reference, const std::vector<float>& candi
 
 int main(int argc, char** argv) {
   if (argc < 3) {
-    std::fprintf(stderr, "usage: golden_test <testdata-dir> <model> [model...]\n");
+    std::fprintf(stderr, "usage: golden_test <data-dir> <model> [model...]\n");
     return 2;
   }
-  const std::string testdata = argv[1];
-  const auto texts = read_texts(testdata + "/corpus.bin");
-  const auto groups = read_lines(testdata + "/corpus.groups");
+  const std::string data_dir = argv[1];
+  const auto texts = read_texts(data_dir + "/corpus.bin");
+  const auto groups = read_lines(data_dir + "/corpus.groups");
   if (texts.empty() || texts.size() != groups.size()) {
     std::fprintf(stderr, "corpus fixtures missing or inconsistent\n");
     return 2;
@@ -131,7 +131,7 @@ int main(int argc, char** argv) {
 
     for (const char* kind : {"document", "query"}) {
       const auto reference =
-          read_vectors(testdata + "/golden/" + slug + "/reference-" + kind + ".f32");
+          read_vectors(data_dir + "/golden/" + slug + "/reference-" + kind + ".f32");
       if (reference.size() != views.size() * dim) {
         std::printf("%-44s SKIP  no %s golden\n", name.c_str(), kind);
         continue;

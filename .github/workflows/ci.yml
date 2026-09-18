@@ -1,0 +1,103 @@
+# Per-change gate: the library builds, its symbol surface is clean, and its
+# vectors still match sentence-transformers.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            platform: linux-amd64
+          - runner: ubuntu-24.04-arm
+            platform: linux-arm64
+          - runner: macos-latest
+            platform: darwin-arm64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # ONNX Runtime takes 20-30 minutes to build from source, so it is cached
+      # against the recipe rather than rebuilt per run.
+      - name: cache onnxruntime
+        id: ort-cache
+        uses: actions/cache@v4
+        with:
+          path: .ort/install
+          key: ort-${{ matrix.platform }}-${{ hashFiles('scripts/build_ort.sh', 'scripts/redundant_archives.py') }}
+
+      - if: steps.ort-cache.outputs.cache-hit != 'true'
+        run: ./scripts/build_ort.sh all
+
+      # A model that is already cached is not downloaded again, and the corpus
+      # run needs both the graph and the tokenizer.
+      - name: cache models
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/cyborgdb-embed
+          key: models-${{ hashFiles('registry.yaml') }}
+
+      - run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+      - run: cmake --build build -j
+
+      - name: golden vectors
+        run: ctest --test-dir build --output-on-failure
+
+  symbols:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: cache onnxruntime
+        id: ort-cache
+        uses: actions/cache@v4
+        with:
+          path: .ort/install
+          key: ort-linux-amd64-${{ hashFiles('scripts/build_ort.sh', 'scripts/redundant_archives.py') }}
+
+      - if: steps.ort-cache.outputs.cache-hit != 'true'
+        run: ./scripts/build_ort.sh all
+
+      # Rebuilds what the consuming project vendors, at its pins, so the audit
+      # reflects a real link rather than a guess.
+      - run: ./scripts/build_core_deps.sh
+
+      # ELF keeps hidden symbols global for static-archive resolution, so this
+      # is not something a macOS run can vouch for: the same archives collide on
+      # 1,748 strong symbols here and none on Darwin.
+      - name: no symbol overlap with a consuming project
+        run: |
+          mapfile -t deps < <(find .ort/core-deps/lib -name '*.a' | sort -u)
+          python3 scripts/symbol_diff.py \
+            --a .ort/install/lib/libonnxruntime_isolated.a \
+            --b "${deps[@]}" --label-a onnxruntime --label-b core-deps
+
+      - name: tokenizer exports only its C API
+        run: |
+          for archive in tokenizer/prebuilt/*/libcyborgdb_tokenizer.a; do
+            found=$(nm -g --defined-only "$archive" 2>/dev/null \
+              | awk '$2 ~ /^[TDBRWV]$/ {print $3}' | sort -u | wc -l) || true
+            echo "$archive: $found exported"
+            [ "$found" -le 3 ] || { echo "tokenizer leaks symbols"; exit 1; }
+          done
+
+  registry:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install -r scripts/requirements.txt
+
+      # The generated header must match the registry it came from, and every
+      # model must be pinned. A model without a parity verdict does not ship.
+      - name: registry is generated and pinned
+        run: |
+          python3 scripts/gen_registry.py
+          git diff --exit-code src/registry_generated.hpp \
+            || { echo "src/registry_generated.hpp is stale; regenerate it"; exit 1; }
+          python3 scripts/gen_registry.py --strict

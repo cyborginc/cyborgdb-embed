@@ -1,0 +1,118 @@
+# Nightly parity against real sentence-transformers, one job per model.
+#
+# This is the slow tier: it needs torch and downloads full weight trees, which
+# is why it is sharded and cached rather than run as one job — and why this
+# repository is separate from the one that consumes it.
+name: parity
+
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+    inputs:
+      models:
+        description: Space-separated registry ids; empty runs all
+        required: false
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      run: ${{ steps.decide.outputs.run }}
+      list: ${{ steps.read.outputs.list }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # Downloading gigabytes of weights to re-verify unchanged code is waste,
+      # so a scheduled run stops unless main has moved since the last attempt.
+      # A manual run always proceeds: asking for it is the intent.
+      - id: decide
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "${{ github.event_name }}" != "schedule" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            echo "manual run: proceeding"
+            exit 0
+          fi
+
+          # Compare against the last run that reached a conclusion, not the last
+          # success: a commit that fails parity should not be retried nightly
+          # forever, it should be fixed.
+          previous=$(gh api \
+            "repos/${{ github.repository }}/actions/workflows/parity.yml/runs?per_page=20" \
+            --jq '[.workflow_runs[] | select(.conclusion != null)][0].head_sha // ""')
+
+          if [ -z "$previous" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            echo "no previous run: proceeding"
+          elif [ "$previous" = "${{ github.sha }}" ]; then
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "main unchanged since $previous: skipping"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            echo "main moved $previous -> ${{ github.sha }}: proceeding"
+          fi
+
+      - id: read
+        if: steps.decide.outputs.run == 'true'
+        run: |
+          pip install -q PyYAML
+          if [ -n "${{ inputs.models }}" ]; then
+            list=$(python3 -c "import json,sys; print(json.dumps(sys.argv[1].split()))" "${{ inputs.models }}")
+          else
+            list=$(python3 -c "
+          import json, yaml
+          print(json.dumps([m['id'] for m in yaml.safe_load(open('registry.yaml'))['models']]))")
+          fi
+          echo "list=$list" >> "$GITHUB_OUTPUT"
+
+  parity:
+    needs: gate
+    if: needs.gate.outputs.run == 'true'
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        model: ${{ fromJson(needs.gate.outputs.list) }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/cache@v4
+        with:
+          path: .ort/install
+          key: ort-linux-amd64-${{ hashFiles('scripts/build_ort.sh', 'scripts/redundant_archives.py') }}
+
+      # Torch weights and ONNX graphs are gigabytes per model. Keyed on the
+      # pinned revision so a re-pin invalidates rather than serving stale weights.
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/huggingface
+            ~/.cache/cyborgdb-embed
+          key: weights-${{ matrix.model }}-${{ hashFiles('registry.yaml') }}
+
+      - run: ./scripts/build_ort.sh all
+        if: hashFiles('.ort/install/lib/libonnxruntime_isolated.a') == ''
+
+      - run: pip install -r tests/parity/requirements.txt
+      - run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build -j
+
+      - name: score against sentence-transformers
+        working-directory: tests/parity
+        run: |
+          PYTHONPATH=. python3 sweep.py \
+            --reference-python python3 --python python3 \
+            --models "${{ matrix.model }}"
+
+      # The verdict is the artifact: it is what gets written back into the
+      # registry, and what decides whether a model may ship at all.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: parity-${{ strategy.job-index }}
+          path: tests/data/parity-summary.json

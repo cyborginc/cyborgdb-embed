@@ -7,7 +7,7 @@
 
 namespace cyborgdb::embed::detail {
 
-inline constexpr std::string_view kRegistryVersion = "3a52c7edbba3";
+inline constexpr std::string_view kRegistryVersion = "1321a563d85e";
 
 enum class Pooling { ClsToken, MeanTokens, MaxTokens };
 

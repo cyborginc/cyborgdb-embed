@@ -21,7 +21,7 @@ models:
     max_seq_length: 256        # not max_position_embeddings, which is 512
     query_prefix: ""
     doc_prefix: ""
-    parity: ""
+    parity: "numerically-equivalent"
 
   - id: sentence-transformers/all-MiniLM-L12-v2
     enum: AllMiniLmL12V2
@@ -35,7 +35,7 @@ models:
     max_seq_length: 128
     query_prefix: ""
     doc_prefix: ""
-    parity: ""
+    parity: "numerically-equivalent"
 
   - id: sentence-transformers/all-mpnet-base-v2
     enum: AllMpnetBaseV2
@@ -49,7 +49,7 @@ models:
     max_seq_length: 384
     query_prefix: ""
     doc_prefix: ""
-    parity: ""
+    parity: "numerically-equivalent"
 
   - id: BAAI/bge-small-en-v1.5
     enum: BgeSmallEnV15
@@ -63,7 +63,7 @@ models:
     max_seq_length: 512
     query_prefix: "Represent this sentence for searching relevant passages: "
     doc_prefix: ""
-    parity: ""
+    parity: "numerically-equivalent"
 
   - id: BAAI/bge-base-en-v1.5
     enum: BgeBaseEnV15
@@ -77,7 +77,7 @@ models:
     max_seq_length: 512
     query_prefix: "Represent this sentence for searching relevant passages: "
     doc_prefix: ""
-    parity: ""
+    parity: "numerically-equivalent"
 
   - id: BAAI/bge-large-en-v1.5
     enum: BgeLargeEnV15
@@ -91,7 +91,7 @@ models:
     max_seq_length: 512
     query_prefix: "Represent this sentence for searching relevant passages: "
     doc_prefix: ""
-    parity: ""
+    parity: "numerically-equivalent"
 
   - id: intfloat/e5-small-v2
     enum: E5SmallV2
@@ -105,7 +105,7 @@ models:
     max_seq_length: 512
     query_prefix: "query: "
     doc_prefix: "passage: "
-    parity: ""
+    parity: "numerically-equivalent"
 
   - id: intfloat/e5-base-v2
     enum: E5BaseV2
@@ -119,7 +119,7 @@ models:
     max_seq_length: 512
     query_prefix: "query: "
     doc_prefix: "passage: "
-    parity: ""
+    parity: "numerically-equivalent"
 
   - id: intfloat/e5-large-v2
     enum: E5LargeV2
@@ -133,7 +133,7 @@ models:
     max_seq_length: 512
     query_prefix: "query: "
     doc_prefix: "passage: "
-    parity: ""
+    parity: "numerically-equivalent"
 
   - id: intfloat/multilingual-e5-small
     enum: MultilingualE5Small
@@ -147,4 +147,4 @@ models:
     max_seq_length: 512
     query_prefix: "query: "
     doc_prefix: "passage: "
-    parity: ""
+    parity: "numerically-equivalent"
