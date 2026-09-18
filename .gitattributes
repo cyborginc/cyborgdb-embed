@@ -11,3 +11,6 @@ src/registry_generated.hpp  linguist-generated
 
 # Prebuilt tokenizer archives, built by scripts/build_tokenizer.sh per platform.
 tokenizer/prebuilt/**/*.a     binary linguist-vendored
+
+# Tests
+parity/             linguist-vendored

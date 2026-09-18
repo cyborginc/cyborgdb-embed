@@ -1,0 +1,532 @@
+{"idx": 0, "group": "edge", "name": "empty", "text": ""}
+{"idx": 1, "group": "edge", "name": "space", "text": " "}
+{"idx": 2, "group": "edge", "name": "whitespace_only", "text": "   \t\n  "}
+{"idx": 3, "group": "edge", "name": "single_char", "text": "a"}
+{"idx": 4, "group": "edge", "name": "single_token", "text": "hello"}
+{"idx": 5, "group": "edge", "name": "punctuation_only", "text": "!!! ??? ..."}
+{"idx": 6, "group": "edge", "name": "digits", "text": "1234567890 3.14159 -42"}
+{"idx": 7, "group": "edge", "name": "accented_latin", "text": "Na\u00efve caf\u00e9 r\u00e9sum\u00e9, Stra\u00dfe, ma\u00f1ana, \u0153uvre"}
+{"idx": 8, "group": "edge", "name": "cjk", "text": "\u6771\u4eac\u306f\u65e5\u672c\u306e\u9996\u90fd\u3067\u3059\u3002\u5317\u4eac\u662f\u4e2d\u56fd\u7684\u9996\u90fd\u3002\uc11c\uc6b8\uc740 \ud55c\uad6d\uc758 \uc218\ub3c4\uc785\ub2c8\ub2e4."}
+{"idx": 9, "group": "edge", "name": "arabic_rtl", "text": "\u0645\u0631\u062d\u0628\u0627 \u0628\u0627\u0644\u0639\u0627\u0644\u0645\u060c \u0647\u0630\u0627 \u0627\u062e\u062a\u0628\u0627\u0631 \u0644\u0644\u062a\u0636\u0645\u064a\u0646 \u0627\u0644\u0646\u0635\u064a"}
+{"idx": 10, "group": "edge", "name": "emoji", "text": "Shipping it \ud83d\ude80\ud83d\udd25 looks good to me \ud83d\udc4d\ud83c\udffd family: \ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67\u200d\ud83d\udc66"}
+{"idx": 11, "group": "edge", "name": "zero_width", "text": "hel\u200blo wor\u200bld"}
+{"idx": 12, "group": "edge", "name": "combining_marks", "text": "e\u0301gale a\u0300 cote\u0301"}
+{"idx": 13, "group": "edge", "name": "mixed_script", "text": "The \u6771\u4eac office ships v2.0 \u2014 ready? Oui, c'est pr\u00eat!"}
+{"idx": 14, "group": "edge", "name": "url_and_code", "text": "See https://example.com/a?b=1&c=2 or run `docker run -p 8000:8000 img`"}
+{"idx": 15, "group": "edge", "name": "newlines", "text": "line one\nline two\n\nline four"}
+{"idx": 16, "group": "edge", "name": "repeated_token", "text": "test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test "}
+{"idx": 17, "group": "edge", "name": "long_512", "text": "The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. "}
+{"idx": 18, "group": "edge", "name": "long_truncation", "text": "Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. Vector databases store high dimensional embeddings. "}
+{"idx": 19, "group": "edge", "name": "very_long_2k", "text": "Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. Confidential computing protects data in use. "}
+{"idx": 20, "group": "real", "name": "stsb_0", "text": "A plane is taking off."}
+{"idx": 21, "group": "real", "name": "stsb_1", "text": "An air plane is taking off."}
+{"idx": 22, "group": "real", "name": "stsb_2", "text": "A man is playing a large flute."}
+{"idx": 23, "group": "real", "name": "stsb_3", "text": "A man is playing a flute."}
+{"idx": 24, "group": "real", "name": "stsb_4", "text": "A man is spreading shreded cheese on a pizza."}
+{"idx": 25, "group": "real", "name": "stsb_5", "text": "A man is spreading shredded cheese on an uncooked pizza."}
+{"idx": 26, "group": "real", "name": "stsb_6", "text": "Three men are playing chess."}
+{"idx": 27, "group": "real", "name": "stsb_7", "text": "Two men are playing chess."}
+{"idx": 28, "group": "real", "name": "stsb_8", "text": "A man is playing the cello."}
+{"idx": 29, "group": "real", "name": "stsb_9", "text": "A man seated is playing the cello."}
+{"idx": 30, "group": "real", "name": "stsb_10", "text": "Some men are fighting."}
+{"idx": 31, "group": "real", "name": "stsb_11", "text": "Two men are fighting."}
+{"idx": 32, "group": "real", "name": "stsb_12", "text": "A man is smoking."}
+{"idx": 33, "group": "real", "name": "stsb_13", "text": "A man is skating."}
+{"idx": 34, "group": "real", "name": "stsb_14", "text": "The man is playing the piano."}
+{"idx": 35, "group": "real", "name": "stsb_15", "text": "The man is playing the guitar."}
+{"idx": 36, "group": "real", "name": "stsb_16", "text": "A man is playing on a guitar and singing."}
+{"idx": 37, "group": "real", "name": "stsb_17", "text": "A woman is playing an acoustic guitar and singing."}
+{"idx": 38, "group": "real", "name": "stsb_18", "text": "A person is throwing a cat on to the ceiling."}
+{"idx": 39, "group": "real", "name": "stsb_19", "text": "A person throws a cat on the ceiling."}
+{"idx": 40, "group": "real", "name": "stsb_20", "text": "The man hit the other man with a stick."}
+{"idx": 41, "group": "real", "name": "stsb_21", "text": "The man spanked the other man with a stick."}
+{"idx": 42, "group": "real", "name": "stsb_22", "text": "A woman picks up and holds a baby kangaroo."}
+{"idx": 43, "group": "real", "name": "stsb_23", "text": "A woman picks up and holds a baby kangaroo in her arms."}
+{"idx": 44, "group": "real", "name": "stsb_24", "text": "A man is playing a bamboo flute."}
+{"idx": 45, "group": "real", "name": "stsb_25", "text": "A person is folding a piece of paper."}
+{"idx": 46, "group": "real", "name": "stsb_26", "text": "Someone is folding a piece of paper."}
+{"idx": 47, "group": "real", "name": "stsb_27", "text": "A man is running on the road."}
+{"idx": 48, "group": "real", "name": "stsb_28", "text": "A panda dog is running on the road."}
+{"idx": 49, "group": "real", "name": "stsb_29", "text": "A dog is trying to get bacon off his back."}
+{"idx": 50, "group": "real", "name": "stsb_30", "text": "A dog is trying to eat the bacon on its back."}
+{"idx": 51, "group": "real", "name": "stsb_31", "text": "The polar bear is sliding on the snow."}
+{"idx": 52, "group": "real", "name": "stsb_32", "text": "A polar bear is sliding across the snow."}
+{"idx": 53, "group": "real", "name": "stsb_33", "text": "A woman is writing."}
+{"idx": 54, "group": "real", "name": "stsb_34", "text": "A woman is swimming."}
+{"idx": 55, "group": "real", "name": "stsb_35", "text": "A cat is rubbing against baby's face."}
+{"idx": 56, "group": "real", "name": "stsb_36", "text": "A cat is rubbing against a baby."}
+{"idx": 57, "group": "real", "name": "stsb_37", "text": "The man is riding a horse."}
+{"idx": 58, "group": "real", "name": "stsb_38", "text": "A man is riding on a horse."}
+{"idx": 59, "group": "real", "name": "stsb_39", "text": "A man pours oil into a pot."}
+{"idx": 60, "group": "real", "name": "stsb_40", "text": "A man pours wine in a pot."}
+{"idx": 61, "group": "real", "name": "stsb_41", "text": "A man is playing a guitar."}
+{"idx": 62, "group": "real", "name": "stsb_42", "text": "A girl is playing a guitar."}
+{"idx": 63, "group": "real", "name": "stsb_43", "text": "A panda is sliding down a slide."}
+{"idx": 64, "group": "real", "name": "stsb_44", "text": "A panda slides down a slide."}
+{"idx": 65, "group": "real", "name": "stsb_45", "text": "A woman is eating something."}
+{"idx": 66, "group": "real", "name": "stsb_46", "text": "A woman is eating meat."}
+{"idx": 67, "group": "real", "name": "stsb_47", "text": "A woman peels a potato."}
+{"idx": 68, "group": "real", "name": "stsb_48", "text": "A woman is peeling a potato."}
+{"idx": 69, "group": "real", "name": "stsb_49", "text": "The boy fell off his bike."}
+{"idx": 70, "group": "real", "name": "stsb_50", "text": "A boy falls off his bike."}
+{"idx": 71, "group": "real", "name": "stsb_51", "text": "The woman is playing the flute."}
+{"idx": 72, "group": "real", "name": "stsb_52", "text": "A woman is playing a flute."}
+{"idx": 73, "group": "real", "name": "stsb_53", "text": "A rabbit is running from an eagle."}
+{"idx": 74, "group": "real", "name": "stsb_54", "text": "A hare is running from a eagle."}
+{"idx": 75, "group": "real", "name": "stsb_55", "text": "The woman is frying a breaded pork chop."}
+{"idx": 76, "group": "real", "name": "stsb_56", "text": "A woman is cooking a breaded pork chop."}
+{"idx": 77, "group": "real", "name": "stsb_57", "text": "A girl is flying a kite."}
+{"idx": 78, "group": "real", "name": "stsb_58", "text": "A girl running is flying a kite."}
+{"idx": 79, "group": "real", "name": "stsb_59", "text": "A man is riding a mechanical bull."}
+{"idx": 80, "group": "real", "name": "stsb_60", "text": "A man rode a mechanical bull."}
+{"idx": 81, "group": "real", "name": "stsb_61", "text": "A woman is dancing and singing with other women."}
+{"idx": 82, "group": "real", "name": "stsb_62", "text": "A woman is dancing and singing in the rain."}
+{"idx": 83, "group": "real", "name": "stsb_63", "text": "A man is slicing a bun."}
+{"idx": 84, "group": "real", "name": "stsb_64", "text": "A man is slicing an onion."}
+{"idx": 85, "group": "real", "name": "stsb_65", "text": "A man is pouring oil into a pan."}
+{"idx": 86, "group": "real", "name": "stsb_66", "text": "A man is pouring oil into a skillet."}
+{"idx": 87, "group": "real", "name": "stsb_67", "text": "A lion is playing with people."}
+{"idx": 88, "group": "real", "name": "stsb_68", "text": "A lion is playing with two men."}
+{"idx": 89, "group": "real", "name": "stsb_69", "text": "A dog rides a skateboard."}
+{"idx": 90, "group": "real", "name": "stsb_70", "text": "A dog is riding a skateboard."}
+{"idx": 91, "group": "real", "name": "stsb_71", "text": "Someone is carving a statue."}
+{"idx": 92, "group": "real", "name": "stsb_72", "text": "A man is carving a statue."}
+{"idx": 93, "group": "real", "name": "stsb_73", "text": "A woman is slicing an onion."}
+{"idx": 94, "group": "real", "name": "stsb_74", "text": "A man is cutting an onion."}
+{"idx": 95, "group": "real", "name": "stsb_75", "text": "A woman peels shrimp."}
+{"idx": 96, "group": "real", "name": "stsb_76", "text": "A woman is peeling shrimp."}
+{"idx": 97, "group": "real", "name": "stsb_77", "text": "A woman is frying fish."}
+{"idx": 98, "group": "real", "name": "stsb_78", "text": "A woman is cooking fish."}
+{"idx": 99, "group": "real", "name": "stsb_79", "text": "A woman is playing an electric guitar."}
+{"idx": 100, "group": "real", "name": "stsb_80", "text": "A woman is playing a guitar."}
+{"idx": 101, "group": "real", "name": "stsb_81", "text": "A baby tiger is playing with a ball."}
+{"idx": 102, "group": "real", "name": "stsb_82", "text": "A baby is playing with a doll."}
+{"idx": 103, "group": "real", "name": "stsb_83", "text": "A person is slicing a tomato."}
+{"idx": 104, "group": "real", "name": "stsb_84", "text": "A person is slicing some meat."}
+{"idx": 105, "group": "real", "name": "stsb_85", "text": "A person cuts an onion."}
+{"idx": 106, "group": "real", "name": "stsb_86", "text": "A person is cutting an onion."}
+{"idx": 107, "group": "real", "name": "stsb_87", "text": "A man is playing the piano."}
+{"idx": 108, "group": "real", "name": "stsb_88", "text": "A woman is playing the violin."}
+{"idx": 109, "group": "real", "name": "stsb_89", "text": "A woman is playing the flute."}
+{"idx": 110, "group": "real", "name": "stsb_90", "text": "A man is playing the guitar."}
+{"idx": 111, "group": "real", "name": "stsb_91", "text": "A man is cutting up a potato."}
+{"idx": 112, "group": "real", "name": "stsb_92", "text": "A man is cutting up carrots."}
+{"idx": 113, "group": "real", "name": "stsb_93", "text": "A kid is playing guitar."}
+{"idx": 114, "group": "real", "name": "stsb_94", "text": "A boy is playing a guitar."}
+{"idx": 115, "group": "real", "name": "stsb_95", "text": "A boy is playing guitar."}
+{"idx": 116, "group": "real", "name": "stsb_96", "text": "A man is playing guitar."}
+{"idx": 117, "group": "real", "name": "stsb_97", "text": "A little boy is playing a keyboard."}
+{"idx": 118, "group": "real", "name": "stsb_98", "text": "A boy is playing key board."}
+{"idx": 119, "group": "real", "name": "stsb_99", "text": "A man is playing an electric guitar."}
+{"idx": 120, "group": "real", "name": "stsb_100", "text": "A dog licks a baby."}
+{"idx": 121, "group": "real", "name": "stsb_101", "text": "A dog is licking a baby."}
+{"idx": 122, "group": "real", "name": "stsb_102", "text": "A man is cutting and onion."}
+{"idx": 123, "group": "real", "name": "stsb_103", "text": "A man is playing the drums."}
+{"idx": 124, "group": "real", "name": "stsb_104", "text": "A woman is slicing a pepper."}
+{"idx": 125, "group": "real", "name": "stsb_105", "text": "A woman is cutting a red pepper."}
+{"idx": 126, "group": "real", "name": "stsb_106", "text": "A man plays the drum."}
+{"idx": 127, "group": "real", "name": "stsb_107", "text": "A woman rides a horse."}
+{"idx": 128, "group": "real", "name": "stsb_108", "text": "A woman is riding a horse."}
+{"idx": 129, "group": "real", "name": "stsb_109", "text": "A man is eating a banana by a tree."}
+{"idx": 130, "group": "real", "name": "stsb_110", "text": "A man is eating a banana."}
+{"idx": 131, "group": "real", "name": "stsb_111", "text": "A cat is playing a key board."}
+{"idx": 132, "group": "real", "name": "stsb_112", "text": "A man is playing two keyboards."}
+{"idx": 133, "group": "real", "name": "stsb_113", "text": "A man chops down a tree with an axe."}
+{"idx": 134, "group": "real", "name": "stsb_114", "text": "A man cut a tree with an axe."}
+{"idx": 135, "group": "real", "name": "stsb_115", "text": "A kid plays with a toy phone."}
+{"idx": 136, "group": "real", "name": "stsb_116", "text": "A little boy plays with a toy phone."}
+{"idx": 137, "group": "real", "name": "stsb_117", "text": "A man is riding a motorcycle."}
+{"idx": 138, "group": "real", "name": "stsb_118", "text": "A man is riding a horse."}
+{"idx": 139, "group": "real", "name": "stsb_119", "text": "A squirrel is spinning around in circles."}
+{"idx": 140, "group": "real", "name": "stsb_120", "text": "A squirrel runs around in circles."}
+{"idx": 141, "group": "real", "name": "stsb_121", "text": "A man and a woman are kissing."}
+{"idx": 142, "group": "real", "name": "stsb_122", "text": "A man and woman kiss."}
+{"idx": 143, "group": "real", "name": "stsb_123", "text": "A man is getting into a car."}
+{"idx": 144, "group": "real", "name": "stsb_124", "text": "A man is getting into a car in a garage."}
+{"idx": 145, "group": "real", "name": "stsb_125", "text": "A man is dancing."}
+{"idx": 146, "group": "real", "name": "stsb_126", "text": "A man is talking."}
+{"idx": 147, "group": "real", "name": "stsb_127", "text": "A man is playing the guitar and singing."}
+{"idx": 148, "group": "real", "name": "stsb_128", "text": "A person is cutting mushrooms."}
+{"idx": 149, "group": "real", "name": "stsb_129", "text": "A person is cutting mushrooms with a knife."}
+{"idx": 150, "group": "real", "name": "stsb_130", "text": "A tiger cub is making a sound."}
+{"idx": 151, "group": "real", "name": "stsb_131", "text": "A tiger is walking around."}
+{"idx": 152, "group": "real", "name": "stsb_132", "text": "A person is slicing onions."}
+{"idx": 153, "group": "real", "name": "stsb_133", "text": "A person is peeling an onion."}
+{"idx": 154, "group": "real", "name": "stsb_134", "text": "A man is playing the trumpet."}
+{"idx": 155, "group": "real", "name": "stsb_135", "text": "A woman is peeling an apple."}
+{"idx": 156, "group": "real", "name": "stsb_136", "text": "A pankda is eating bamboo."}
+{"idx": 157, "group": "real", "name": "stsb_137", "text": "A panda bear is eating some bamboo."}
+{"idx": 158, "group": "real", "name": "stsb_138", "text": "A person is peeling an eggplant."}
+{"idx": 159, "group": "real", "name": "stsb_139", "text": "A monkey pushes another monkey."}
+{"idx": 160, "group": "real", "name": "stsb_140", "text": "The monkey pushed the other monkey."}
+{"idx": 161, "group": "real", "name": "stsb_141", "text": "A squirrel is moving in circles."}
+{"idx": 162, "group": "real", "name": "stsb_142", "text": "A man is tying his shoe."}
+{"idx": 163, "group": "real", "name": "stsb_143", "text": "A man ties his shoe."}
+{"idx": 164, "group": "real", "name": "stsb_144", "text": "A boy is singing and playing the piano."}
+{"idx": 165, "group": "real", "name": "stsb_145", "text": "A boy is playing the piano."}
+{"idx": 166, "group": "real", "name": "stsb_146", "text": "A dog is eating water melon."}
+{"idx": 167, "group": "real", "name": "stsb_147", "text": "A dog is eating a piece of watermelon."}
+{"idx": 168, "group": "real", "name": "stsb_148", "text": "A woman is chopping broccoli."}
+{"idx": 169, "group": "real", "name": "stsb_149", "text": "A woman is chopping broccoli with a knife."}
+{"idx": 170, "group": "real", "name": "stsb_150", "text": "A man is peeling a potato."}
+{"idx": 171, "group": "real", "name": "stsb_151", "text": "A man peeled a potatoe."}
+{"idx": 172, "group": "real", "name": "stsb_152", "text": "A man plays a guitar."}
+{"idx": 173, "group": "real", "name": "stsb_153", "text": "A woman is slicing tomato."}
+{"idx": 174, "group": "real", "name": "stsb_154", "text": "A man is slicing onion."}
+{"idx": 175, "group": "real", "name": "stsb_155", "text": "A man swims underwater."}
+{"idx": 176, "group": "real", "name": "stsb_156", "text": "A woman is swimming underwater."}
+{"idx": 177, "group": "real", "name": "stsb_157", "text": "A man and woman are talking."}
+{"idx": 178, "group": "real", "name": "stsb_158", "text": "A man and woman is eating."}
+{"idx": 179, "group": "real", "name": "stsb_159", "text": "A small dog is chasing a yoga ball."}
+{"idx": 180, "group": "real", "name": "stsb_160", "text": "A dog is chasing a ball."}
+{"idx": 181, "group": "real", "name": "stsb_161", "text": "The men are playing cricket."}
+{"idx": 182, "group": "real", "name": "stsb_162", "text": "The men are playing basketball."}
+{"idx": 183, "group": "real", "name": "stsb_163", "text": "A man rides off on a motorcycle."}
+{"idx": 184, "group": "real", "name": "stsb_164", "text": "A man is riding on a motorcycle."}
+{"idx": 185, "group": "real", "name": "stsb_165", "text": "A man is singing and playing a guitar."}
+{"idx": 186, "group": "real", "name": "stsb_166", "text": "The man talked on the telephone."}
+{"idx": 187, "group": "real", "name": "stsb_167", "text": "The man is talking on the phone."}
+{"idx": 188, "group": "real", "name": "stsb_168", "text": "A man is fishing."}
+{"idx": 189, "group": "real", "name": "stsb_169", "text": "A man is exercising."}
+{"idx": 190, "group": "real", "name": "stsb_170", "text": "A man is levitating."}
+{"idx": 191, "group": "real", "name": "stsb_171", "text": "Two boys are driving."}
+{"idx": 192, "group": "real", "name": "stsb_172", "text": "Two bays are dancing."}
+{"idx": 193, "group": "real", "name": "stsb_173", "text": "A girl is riding a horse."}
+{"idx": 194, "group": "real", "name": "stsb_174", "text": "A man is riding a bicycle."}
+{"idx": 195, "group": "real", "name": "stsb_175", "text": "A monkey is riding a bike."}
+{"idx": 196, "group": "real", "name": "stsb_176", "text": "A man is slicing potatoes."}
+{"idx": 197, "group": "real", "name": "stsb_177", "text": "A woman is peeling potato."}
+{"idx": 198, "group": "real", "name": "stsb_178", "text": "A man is slicing potato."}
+{"idx": 199, "group": "real", "name": "stsb_179", "text": "Someoen is playing guitar."}
+{"idx": 200, "group": "real", "name": "stsb_180", "text": "A woman is slicing a leek."}
+{"idx": 201, "group": "real", "name": "stsb_181", "text": "A woman is slicing ginger."}
+{"idx": 202, "group": "real", "name": "stsb_182", "text": "The man cut a paper plate."}
+{"idx": 203, "group": "real", "name": "stsb_183", "text": "A man is cutting a paper plate."}
+{"idx": 204, "group": "real", "name": "stsb_184", "text": "A man is playing the flute."}
+{"idx": 205, "group": "real", "name": "stsb_185", "text": "The man is playing the violin."}
+{"idx": 206, "group": "real", "name": "stsb_186", "text": "A woman is slicing up some meat."}
+{"idx": 207, "group": "real", "name": "stsb_187", "text": "A woman is breading some meat."}
+{"idx": 208, "group": "real", "name": "stsb_188", "text": "A man is playing on his keyboard."}
+{"idx": 209, "group": "real", "name": "stsb_189", "text": "A man is playing a keyboard piano."}
+{"idx": 210, "group": "real", "name": "stsb_190", "text": "The lady chopped up the green onions."}
+{"idx": 211, "group": "real", "name": "stsb_191", "text": "The lady cut up a green onion."}
+{"idx": 212, "group": "real", "name": "stsb_192", "text": "Someone is sitring noodles in water."}
+{"idx": 213, "group": "real", "name": "stsb_193", "text": "A woman is boiling noodles in water."}
+{"idx": 214, "group": "real", "name": "stsb_194", "text": "Lionel Richie is dancing on the ceiling."}
+{"idx": 215, "group": "real", "name": "stsb_195", "text": "Lionel Ritchie dances while standing on the ceiling."}
+{"idx": 216, "group": "real", "name": "stsb_196", "text": "A man is playing a piano."}
+{"idx": 217, "group": "real", "name": "stsb_197", "text": "A person is playing the piano."}
+{"idx": 218, "group": "real", "name": "stsb_198", "text": "A woman is playing flute."}
+{"idx": 219, "group": "real", "name": "stsb_199", "text": "A woman plays on a flute."}
+{"idx": 220, "group": "real", "name": "stsb_200", "text": "A boy is checking a calender."}
+{"idx": 221, "group": "real", "name": "stsb_201", "text": "A boy is looking at a calendar."}
+{"idx": 222, "group": "real", "name": "stsb_202", "text": "A woman is cutting an onion."}
+{"idx": 223, "group": "real", "name": "stsb_203", "text": "A woman is chopping onions."}
+{"idx": 224, "group": "real", "name": "stsb_204", "text": "A woman is using a sewing machine."}
+{"idx": 225, "group": "real", "name": "stsb_205", "text": "A woman is sewing on a machine."}
+{"idx": 226, "group": "real", "name": "stsb_206", "text": "A woman is flipping pancakes."}
+{"idx": 227, "group": "real", "name": "stsb_207", "text": "A cartoon chef is flipping pancakes."}
+{"idx": 228, "group": "real", "name": "stsb_208", "text": "A car is driving down the road."}
+{"idx": 229, "group": "real", "name": "stsb_209", "text": "A man is talking on a phone."}
+{"idx": 230, "group": "real", "name": "stsb_210", "text": "A man is riding a bike."}
+{"idx": 231, "group": "real", "name": "stsb_211", "text": "A woman is dancing."}
+{"idx": 232, "group": "real", "name": "stsb_212", "text": "A man is eating."}
+{"idx": 233, "group": "real", "name": "stsb_213", "text": "A man is spinning."}
+{"idx": 234, "group": "real", "name": "stsb_214", "text": "A monkey is swinging from limb to limb."}
+{"idx": 235, "group": "real", "name": "stsb_215", "text": "A monkey is swinging from tree to tree."}
+{"idx": 236, "group": "real", "name": "stsb_216", "text": "The people got off the train."}
+{"idx": 237, "group": "real", "name": "stsb_217", "text": "The people got off the train at the station."}
+{"idx": 238, "group": "real", "name": "stsb_218", "text": "A dog is jumping on a trampoline."}
+{"idx": 239, "group": "real", "name": "stsb_219", "text": "A dog bounces on a trampoline."}
+{"idx": 240, "group": "real", "name": "stsb_220", "text": "A boy is playing an instrument."}
+{"idx": 241, "group": "real", "name": "stsb_221", "text": "A man is playing a trumpet."}
+{"idx": 242, "group": "real", "name": "stsb_222", "text": "A woman plays the guitar."}
+{"idx": 243, "group": "real", "name": "stsb_223", "text": "A man sings and plays the guitar."}
+{"idx": 244, "group": "real", "name": "stsb_224", "text": "A woman is picking a can."}
+{"idx": 245, "group": "real", "name": "stsb_225", "text": "A woman is slicing a tomato."}
+{"idx": 246, "group": "real", "name": "stsb_226", "text": "A man is climbing a rope."}
+{"idx": 247, "group": "real", "name": "stsb_227", "text": "A man climbs up a rope."}
+{"idx": 248, "group": "real", "name": "stsb_228", "text": "A man is lifting a car."}
+{"idx": 249, "group": "real", "name": "stsb_229", "text": "A man is climbing a wall."}
+{"idx": 250, "group": "real", "name": "stsb_230", "text": "A man and woman are driving down the street in a jeep."}
+{"idx": 251, "group": "real", "name": "stsb_231", "text": "A man and woman are driving down the road in an open air vehicle."}
+{"idx": 252, "group": "real", "name": "stsb_232", "text": "The shirtless man sat in a chair."}
+{"idx": 253, "group": "real", "name": "stsb_233", "text": "A shirtless man is sitting on a chair."}
+{"idx": 254, "group": "real", "name": "stsb_234", "text": "Two women are wrestling."}
+{"idx": 255, "group": "real", "name": "stsb_235", "text": "Two women are wrestling on the floor."}
+{"idx": 256, "group": "real", "name": "stsb_236", "text": "The puppy played with a blue tennis ball."}
+{"idx": 257, "group": "real", "name": "stsb_237", "text": "A puppy is playing with a tennis ball."}
+{"idx": 258, "group": "real", "name": "stsb_238", "text": "A kangroo is eating something."}
+{"idx": 259, "group": "real", "name": "stsb_239", "text": "A kangaroo is eating."}
+{"idx": 260, "group": "real", "name": "stsb_240", "text": "A cat is playing a piano."}
+{"idx": 261, "group": "real", "name": "stsb_241", "text": "The man cut some carpet with a knife."}
+{"idx": 262, "group": "real", "name": "stsb_242", "text": "A man is cutting carpet with a knife."}
+{"idx": 263, "group": "real", "name": "stsb_243", "text": "A woman is riding a motorized scooter down a road."}
+{"idx": 264, "group": "real", "name": "stsb_244", "text": "A man is riding a motor scooter."}
+{"idx": 265, "group": "real", "name": "stsb_245", "text": "someone is slicing a vegetable."}
+{"idx": 266, "group": "real", "name": "stsb_246", "text": "Someone is slicing a tomato."}
+{"idx": 267, "group": "real", "name": "stsb_247", "text": "A dog licks up a baby's drool."}
+{"idx": 268, "group": "real", "name": "stsb_248", "text": "A man is rowing a boat."}
+{"idx": 269, "group": "real", "name": "stsb_249", "text": "A man is slicing a tomato."}
+{"idx": 270, "group": "real", "name": "stsb_250", "text": "A man cuts up potatos."}
+{"idx": 271, "group": "real", "name": "stsb_251", "text": "A man slices potatoes."}
+{"idx": 272, "group": "real", "name": "stsb_252", "text": "A woman is chopping up garlic."}
+{"idx": 273, "group": "real", "name": "stsb_253", "text": "The woman is dicing garlic."}
+{"idx": 274, "group": "real", "name": "stsb_254", "text": "An animal run in circles."}
+{"idx": 275, "group": "real", "name": "stsb_255", "text": "A squirrel runs in circles."}
+{"idx": 276, "group": "real", "name": "stsb_256", "text": "A man is walking slowly across a rope bridge."}
+{"idx": 277, "group": "real", "name": "stsb_257", "text": "A boy is walking across a bridge."}
+{"idx": 278, "group": "real", "name": "stsb_258", "text": "A man seated in a room is playing the guitar."}
+{"idx": 279, "group": "real", "name": "stsb_259", "text": "A man plays the flute."}
+{"idx": 280, "group": "real", "name": "stsb_260", "text": "A woman cracks two eggs into a glass bowl."}
+{"idx": 281, "group": "real", "name": "stsb_261", "text": "A woman is cracking an egg into a bowl."}
+{"idx": 282, "group": "real", "name": "stsb_262", "text": "A man is cutting a fish."}
+{"idx": 283, "group": "real", "name": "stsb_263", "text": "A man guts a fish."}
+{"idx": 284, "group": "real", "name": "stsb_264", "text": "Two men are packing suitcases into the trunk of a car."}
+{"idx": 285, "group": "real", "name": "stsb_265", "text": "The men are putting suitcases into the car's trunk."}
+{"idx": 286, "group": "real", "name": "stsb_266", "text": "A man pours oil on some tomatos."}
+{"idx": 287, "group": "real", "name": "stsb_267", "text": "The man poured oil on the cut tomatoes."}
+{"idx": 288, "group": "real", "name": "stsb_268", "text": "A man is slicing something."}
+{"idx": 289, "group": "real", "name": "stsb_269", "text": "A man is paddling a canoe."}
+{"idx": 290, "group": "real", "name": "stsb_270", "text": "A man is playing a harp."}
+{"idx": 291, "group": "real", "name": "stsb_271", "text": "A man and woman are walking together through the woods."}
+{"idx": 292, "group": "real", "name": "stsb_272", "text": "A man and woman are walking arm in arm through a wooded area."}
+{"idx": 293, "group": "real", "name": "stsb_273", "text": "The woman picked up the kangaroo."}
+{"idx": 294, "group": "real", "name": "stsb_274", "text": "A woman picks up a baby kangaroo."}
+{"idx": 295, "group": "real", "name": "stsb_275", "text": "Fish are swimming."}
+{"idx": 296, "group": "real", "name": "stsb_276", "text": "A fish is swimming."}
+{"idx": 297, "group": "real", "name": "stsb_277", "text": "Two women mix something in a food processor."}
+{"idx": 298, "group": "real", "name": "stsb_278", "text": "Two women make something in a blender."}
+{"idx": 299, "group": "real", "name": "stsb_279", "text": "A person is surfing a large wave."}
+{"idx": 300, "group": "real", "name": "stsb_280", "text": "A person is surfing."}
+{"idx": 301, "group": "real", "name": "stsb_281", "text": "A man is stabbing a target."}
+{"idx": 302, "group": "real", "name": "stsb_282", "text": "A man is playing a flute in a band."}
+{"idx": 303, "group": "real", "name": "stsb_283", "text": "The man spread butter on the loaf of bread."}
+{"idx": 304, "group": "real", "name": "stsb_284", "text": "A man is spreading butter onto bread."}
+{"idx": 305, "group": "real", "name": "stsb_285", "text": "A person is boiling noodles."}
+{"idx": 306, "group": "real", "name": "stsb_286", "text": "A group of people dance on a hill."}
+{"idx": 307, "group": "real", "name": "stsb_287", "text": "A group of people are dancing."}
+{"idx": 308, "group": "real", "name": "stsb_288", "text": "A man is dancing outside."}
+{"idx": 309, "group": "real", "name": "stsb_289", "text": "A man is playing flute."}
+{"idx": 310, "group": "real", "name": "stsb_290", "text": "A woman is feeding a man."}
+{"idx": 311, "group": "real", "name": "stsb_291", "text": "A woman is mixing meat."}
+{"idx": 312, "group": "real", "name": "stsb_292", "text": "A man is putting a pan into an oven."}
+{"idx": 313, "group": "real", "name": "stsb_293", "text": "A woman is sitting at a desk."}
+{"idx": 314, "group": "real", "name": "stsb_294", "text": "A woman is riding a donkey."}
+{"idx": 315, "group": "real", "name": "stsb_295", "text": "Medics transport a patient on a stretcher."}
+{"idx": 316, "group": "real", "name": "stsb_296", "text": "A doctor rushes a patient on a stretcher."}
+{"idx": 317, "group": "real", "name": "stsb_297", "text": "A woman is playing a flute on stage."}
+{"idx": 318, "group": "real", "name": "stsb_298", "text": "Two baby pandas are playing."}
+{"idx": 319, "group": "real", "name": "stsb_299", "text": "Two pandas are laying together."}
+{"idx": 320, "group": "real", "name": "stsb_300", "text": "A baby is laughing."}
+{"idx": 321, "group": "real", "name": "stsb_301", "text": "A baby is laughing and giggling."}
+{"idx": 322, "group": "real", "name": "stsb_302", "text": "A boy is playing a piano."}
+{"idx": 323, "group": "real", "name": "stsb_303", "text": "A man is folding paper."}
+{"idx": 324, "group": "real", "name": "stsb_304", "text": "Three women are dancing."}
+{"idx": 325, "group": "real", "name": "stsb_305", "text": "The man is dancing."}
+{"idx": 326, "group": "real", "name": "stsb_306", "text": "The cats are playing with each other."}
+{"idx": 327, "group": "real", "name": "stsb_307", "text": "Two cats are fighting each other."}
+{"idx": 328, "group": "real", "name": "stsb_308", "text": "A person is writing."}
+{"idx": 329, "group": "real", "name": "stsb_309", "text": "A person is writing with a pencil."}
+{"idx": 330, "group": "real", "name": "stsb_310", "text": "A man is running."}
+{"idx": 331, "group": "real", "name": "stsb_311", "text": "A man is running down a road."}
+{"idx": 332, "group": "real", "name": "stsb_312", "text": "The woman is rolling dough."}
+{"idx": 333, "group": "real", "name": "stsb_313", "text": "A woman is flouring and rolling dough."}
+{"idx": 334, "group": "real", "name": "stsb_314", "text": "A woman is adding spices on a meat."}
+{"idx": 335, "group": "real", "name": "stsb_315", "text": "Woman is adding sugar to meat."}
+{"idx": 336, "group": "real", "name": "stsb_316", "text": "A woman is adding oil on fishes."}
+{"idx": 337, "group": "real", "name": "stsb_317", "text": "A woman is pouring water on fish."}
+{"idx": 338, "group": "real", "name": "stsb_318", "text": "A young boy is holding a guitar."}
+{"idx": 339, "group": "real", "name": "stsb_319", "text": "A little boy is playing a guitar."}
+{"idx": 340, "group": "real", "name": "stsb_320", "text": "A cheetah is running."}
+{"idx": 341, "group": "real", "name": "stsb_321", "text": "A cheetah is running across a field."}
+{"idx": 342, "group": "real", "name": "stsb_322", "text": "The man is eating pizza."}
+{"idx": 343, "group": "real", "name": "stsb_323", "text": "A man is eating a slice of pizza."}
+{"idx": 344, "group": "real", "name": "stsb_324", "text": "An orangutan is riding a bus."}
+{"idx": 345, "group": "real", "name": "stsb_325", "text": "A monkey is riding on a bus."}
+{"idx": 346, "group": "real", "name": "stsb_326", "text": "A man and a woman talk in a diner."}
+{"idx": 347, "group": "real", "name": "stsb_327", "text": "A man and a woman are riding on a bicycle."}
+{"idx": 348, "group": "real", "name": "stsb_328", "text": "A man is cleaning a glass door."}
+{"idx": 349, "group": "real", "name": "stsb_329", "text": "A girl is singing and playing a guitar."}
+{"idx": 350, "group": "real", "name": "stsb_330", "text": "A young man is singing while playing the guitar."}
+{"idx": 351, "group": "real", "name": "stsb_331", "text": "A girl is communicating with sign language."}
+{"idx": 352, "group": "real", "name": "stsb_332", "text": "A young girl is using sign language."}
+{"idx": 353, "group": "real", "name": "stsb_333", "text": "A woman is doing weight exercises."}
+{"idx": 354, "group": "real", "name": "stsb_334", "text": "A woman is doing her hair."}
+{"idx": 355, "group": "real", "name": "stsb_335", "text": "A man is getting inside a car."}
+{"idx": 356, "group": "real", "name": "stsb_336", "text": "An elderly man is getting into a red car."}
+{"idx": 357, "group": "real", "name": "stsb_337", "text": "A big green ball knocks a potato over."}
+{"idx": 358, "group": "real", "name": "stsb_338", "text": "A large green ball hits a potato."}
+{"idx": 359, "group": "real", "name": "stsb_339", "text": "A cat is playing keyboards."}
+{"idx": 360, "group": "real", "name": "stsb_340", "text": "Two dogs swim in a pool."}
+{"idx": 361, "group": "real", "name": "stsb_341", "text": "Dogs are swimming in a pool."}
+{"idx": 362, "group": "real", "name": "stsb_342", "text": "The man used a chopper to chop the onion."}
+{"idx": 363, "group": "real", "name": "stsb_343", "text": "The man used a machine to chop up a potatoe."}
+{"idx": 364, "group": "real", "name": "stsb_344", "text": "A woman slices tofu."}
+{"idx": 365, "group": "real", "name": "stsb_345", "text": "A woman is cutting tofu."}
+{"idx": 366, "group": "real", "name": "stsb_346", "text": "A herd of deer are crossing the street."}
+{"idx": 367, "group": "real", "name": "stsb_347", "text": "A herd of caribou are crossing a road."}
+{"idx": 368, "group": "real", "name": "stsb_348", "text": "The person is riding the horse."}
+{"idx": 369, "group": "real", "name": "stsb_349", "text": "Someone is feeding a animal."}
+{"idx": 370, "group": "real", "name": "stsb_350", "text": "Someone is playing a piano."}
+{"idx": 371, "group": "real", "name": "stsb_351", "text": "Someone is slicing tortila's."}
+{"idx": 372, "group": "real", "name": "stsb_352", "text": "Someone is riding a horse."}
+{"idx": 373, "group": "real", "name": "stsb_353", "text": "Someone is mixing ingrediants."}
+{"idx": 374, "group": "real", "name": "stsb_354", "text": "Someone is sewing things."}
+{"idx": 375, "group": "real", "name": "stsb_355", "text": "A rooster pecks at a dead mouse."}
+{"idx": 376, "group": "real", "name": "stsb_356", "text": "A chicken is pecking at a dead mouse."}
+{"idx": 377, "group": "real", "name": "stsb_357", "text": "A woman holds a kangaroo."}
+{"idx": 378, "group": "real", "name": "stsb_358", "text": "A woman is picking up a kangaroo."}
+{"idx": 379, "group": "real", "name": "stsb_359", "text": "A man is playing with frogs"}
+{"idx": 380, "group": "real", "name": "stsb_360", "text": "A cat is playing with a camera."}
+{"idx": 381, "group": "real", "name": "stsb_361", "text": "Two men are talking."}
+{"idx": 382, "group": "real", "name": "stsb_362", "text": "Two men are playing guitar."}
+{"idx": 383, "group": "real", "name": "stsb_363", "text": "A man spreads butter on a big piece of bread."}
+{"idx": 384, "group": "real", "name": "stsb_364", "text": "A man is smearing butter on a slice of garlic bread."}
+{"idx": 385, "group": "real", "name": "stsb_365", "text": "A man is running across a high wire."}
+{"idx": 386, "group": "real", "name": "stsb_366", "text": "A man is running on rope."}
+{"idx": 387, "group": "real", "name": "stsb_367", "text": "A man is mowing a lawn."}
+{"idx": 388, "group": "real", "name": "stsb_368", "text": "A woman is cutting a lemon."}
+{"idx": 389, "group": "real", "name": "stsb_369", "text": "A man is opening a door."}
+{"idx": 390, "group": "real", "name": "stsb_370", "text": "A man is slicing a potato into pieces."}
+{"idx": 391, "group": "real", "name": "stsb_371", "text": "A man is cutting a potato."}
+{"idx": 392, "group": "real", "name": "stsb_372", "text": "The woman is cutting cooked octopus."}
+{"idx": 393, "group": "real", "name": "stsb_373", "text": "A woman is chopping octopus."}
+{"idx": 394, "group": "real", "name": "stsb_374", "text": "A man is punching through boards."}
+{"idx": 395, "group": "real", "name": "stsb_375", "text": "A dog is running through water."}
+{"idx": 396, "group": "real", "name": "stsb_376", "text": "A man is eating bread."}
+{"idx": 397, "group": "real", "name": "stsb_377", "text": "Two foxes are eating from a plate on a brick patio."}
+{"idx": 398, "group": "real", "name": "stsb_378", "text": "Foxes are eating from a plate."}
+{"idx": 399, "group": "real", "name": "stsb_379", "text": "A boy is playing a key-board."}
+{"idx": 400, "group": "real", "name": "stsb_380", "text": "A person plays a keyboard."}
+{"idx": 401, "group": "real", "name": "stsb_381", "text": "Someone is playing a keyboard."}
+{"idx": 402, "group": "real", "name": "stsb_382", "text": "A man is shooting a gun."}
+{"idx": 403, "group": "real", "name": "stsb_383", "text": "A man is spitting."}
+{"idx": 404, "group": "real", "name": "stsb_384", "text": "Someone is slicing an onion."}
+{"idx": 405, "group": "real", "name": "stsb_385", "text": "Someoen is peeling a potato."}
+{"idx": 406, "group": "real", "name": "stsb_386", "text": "A man is swimming."}
+{"idx": 407, "group": "real", "name": "stsb_387", "text": "A woman is slicing meat."}
+{"idx": 408, "group": "real", "name": "stsb_388", "text": "A man plays an acoustic guitar."}
+{"idx": 409, "group": "real", "name": "stsb_389", "text": "A woman is slicing a pumpkin."}
+{"idx": 410, "group": "real", "name": "stsb_390", "text": "A woman is riding an elephant."}
+{"idx": 411, "group": "real", "name": "stsb_391", "text": "A woman is kneading dough."}
+{"idx": 412, "group": "real", "name": "stsb_392", "text": "A woman is cracking eggs into a bowl."}
+{"idx": 413, "group": "real", "name": "stsb_393", "text": "A woman is placing skewers onto a rack."}
+{"idx": 414, "group": "real", "name": "stsb_394", "text": "A car is moving through a road."}
+{"idx": 415, "group": "real", "name": "stsb_395", "text": "Someone is greasing a pan."}
+{"idx": 416, "group": "real", "name": "stsb_396", "text": "Smeone is laying down."}
+{"idx": 417, "group": "real", "name": "stsb_397", "text": "A man is draining pasta."}
+{"idx": 418, "group": "real", "name": "stsb_398", "text": "A woman is drinking vodka."}
+{"idx": 419, "group": "real", "name": "stsb_399", "text": "A woman is exercising."}
+{"idx": 420, "group": "real", "name": "stsb_400", "text": "A woman is cutting meat into pieces."}
+{"idx": 421, "group": "real", "name": "stsb_401", "text": "A woman is cutting up some meat."}
+{"idx": 422, "group": "real", "name": "stsb_402", "text": "A man is rinsing a steak."}
+{"idx": 423, "group": "real", "name": "stsb_403", "text": "A man is selling items."}
+{"idx": 424, "group": "real", "name": "stsb_404", "text": "A man is cleaning the house."}
+{"idx": 425, "group": "real", "name": "stsb_405", "text": "A man is jumping a wall."}
+{"idx": 426, "group": "real", "name": "stsb_406", "text": "A man jumps onto a short wall."}
+{"idx": 427, "group": "real", "name": "stsb_407", "text": "Runners race around a track."}
+{"idx": 428, "group": "real", "name": "stsb_408", "text": "Runners compete in a race."}
+{"idx": 429, "group": "real", "name": "stsb_409", "text": "A man is kicking a soccer ball."}
+{"idx": 430, "group": "real", "name": "stsb_410", "text": "A man is mixing a bowl."}
+{"idx": 431, "group": "real", "name": "stsb_411", "text": "A woman is frying something."}
+{"idx": 432, "group": "real", "name": "stsb_412", "text": "A cat is licking a sucker."}
+{"idx": 433, "group": "real", "name": "stsb_413", "text": "A woman is slicing cucumber."}
+{"idx": 434, "group": "real", "name": "stsb_414", "text": "A woman is dancing by a fire."}
+{"idx": 435, "group": "real", "name": "stsb_415", "text": "A woman is taking a bath."}
+{"idx": 436, "group": "real", "name": "stsb_416", "text": "The man is slicing a fish open."}
+{"idx": 437, "group": "real", "name": "stsb_417", "text": "A man is slicing a potato."}
+{"idx": 438, "group": "real", "name": "stsb_418", "text": "Butter is melting in a pan."}
+{"idx": 439, "group": "real", "name": "stsb_419", "text": "A man is melting butter in a pan."}
+{"idx": 440, "group": "real", "name": "stsb_420", "text": "Three boys are dancing."}
+{"idx": 441, "group": "real", "name": "stsb_421", "text": "Kids are dancing."}
+{"idx": 442, "group": "real", "name": "stsb_422", "text": "A woman is playing a game with a man."}
+{"idx": 443, "group": "real", "name": "stsb_423", "text": "A man is playing piano."}
+{"idx": 444, "group": "real", "name": "stsb_424", "text": "The man is driving a white car."}
+{"idx": 445, "group": "real", "name": "stsb_425", "text": "A man is giving an interview."}
+{"idx": 446, "group": "real", "name": "stsb_426", "text": "A man drove his car."}
+{"idx": 447, "group": "real", "name": "stsb_427", "text": "A man is driving a car."}
+{"idx": 448, "group": "real", "name": "stsb_428", "text": "A car backs out of a space."}
+{"idx": 449, "group": "real", "name": "stsb_429", "text": "A car is backing out of a blocked lane."}
+{"idx": 450, "group": "real", "name": "stsb_430", "text": "A man puts some cheese on a pizza."}
+{"idx": 451, "group": "real", "name": "stsb_431", "text": "The man sprinkled cheese on the pizza."}
+{"idx": 452, "group": "real", "name": "stsb_432", "text": "The boy is playing the piano."}
+{"idx": 453, "group": "real", "name": "stsb_433", "text": "A boy plays a piano."}
+{"idx": 454, "group": "real", "name": "stsb_434", "text": "The man played his guitar."}
+{"idx": 455, "group": "real", "name": "stsb_435", "text": "A man is playing a keyboard."}
+{"idx": 456, "group": "real", "name": "stsb_436", "text": "A man is walking on a rope."}
+{"idx": 457, "group": "real", "name": "stsb_437", "text": "A man is riding a mo-pad."}
+{"idx": 458, "group": "real", "name": "stsb_438", "text": "A girl is playing a flute."}
+{"idx": 459, "group": "real", "name": "stsb_439", "text": "A band is playing on a stage."}
+{"idx": 460, "group": "real", "name": "stsb_440", "text": "People step off a train."}
+{"idx": 461, "group": "real", "name": "stsb_441", "text": "A group of people get off a train."}
+{"idx": 462, "group": "real", "name": "stsb_442", "text": "A dog is looking into swimming pool."}
+{"idx": 463, "group": "real", "name": "stsb_443", "text": "A dog is walking around a pool."}
+{"idx": 464, "group": "real", "name": "stsb_444", "text": "A man is buttering a piece of bread."}
+{"idx": 465, "group": "real", "name": "stsb_445", "text": "A man is applying butter to bread."}
+{"idx": 466, "group": "real", "name": "stsb_446", "text": "A man is cutting tomatoes into pieces."}
+{"idx": 467, "group": "real", "name": "stsb_447", "text": "A woman is cutting some vegetables."}
+{"idx": 468, "group": "real", "name": "stsb_448", "text": "Three teenage girls danced in the room."}
+{"idx": 469, "group": "real", "name": "stsb_449", "text": "Some teenage girls are dancing for the camera."}
+{"idx": 470, "group": "real", "name": "stsb_450", "text": "A lion is walking."}
+{"idx": 471, "group": "real", "name": "stsb_451", "text": "A lion is pacing in a pen."}
+{"idx": 472, "group": "real", "name": "stsb_452", "text": "A man shooting a car."}
+{"idx": 473, "group": "real", "name": "stsb_453", "text": "A black horse is running around."}
+{"idx": 474, "group": "real", "name": "stsb_454", "text": "The horse is running."}
+{"idx": 475, "group": "real", "name": "stsb_455", "text": "A woman is deveining shrimp."}
+{"idx": 476, "group": "real", "name": "stsb_456", "text": "A man is dancing in rain."}
+{"idx": 477, "group": "real", "name": "stsb_457", "text": "A woman is washing a freezer."}
+{"idx": 478, "group": "real", "name": "stsb_458", "text": "A man walks down a path."}
+{"idx": 479, "group": "real", "name": "stsb_459", "text": "A man walks across a tight rope."}
+{"idx": 480, "group": "real", "name": "stsb_460", "text": "A woman is cutting a jalepeno."}
+{"idx": 481, "group": "real", "name": "stsb_461", "text": "A dog is barking at a ball."}
+{"idx": 482, "group": "real", "name": "stsb_462", "text": "A dog swims after a tennis ball."}
+{"idx": 483, "group": "real", "name": "stsb_463", "text": "A kid runs away from a fish swinging around on a fishing pole."}
+{"idx": 484, "group": "real", "name": "stsb_464", "text": "A little kid is running around a fishing pole."}
+{"idx": 485, "group": "real", "name": "stsb_465", "text": "A man is walking along a path through wilderness."}
+{"idx": 486, "group": "real", "name": "stsb_466", "text": "A man is walking down a road."}
+{"idx": 487, "group": "real", "name": "stsb_467", "text": "An elderly man is speaking at a podium."}
+{"idx": 488, "group": "real", "name": "stsb_468", "text": "A man is making a speech at the podium."}
+{"idx": 489, "group": "real", "name": "stsb_469", "text": "A man riding a horse in slow motion."}
+{"idx": 490, "group": "real", "name": "stsb_470", "text": "A person is cutting some burrata cheese."}
+{"idx": 491, "group": "real", "name": "stsb_471", "text": "The person is slicing cheese."}
+{"idx": 492, "group": "real", "name": "stsb_472", "text": "The man is shooting an automatic rifle."}
+{"idx": 493, "group": "real", "name": "stsb_473", "text": "A man is crushing garlic with the back of a knife."}
+{"idx": 494, "group": "real", "name": "stsb_474", "text": "A woman is slicing meat with a knife."}
+{"idx": 495, "group": "real", "name": "stsb_475", "text": "A woman is filing her fingernails with an emery board."}
+{"idx": 496, "group": "real", "name": "stsb_476", "text": "A woman is feeding her baby with a bottle."}
+{"idx": 497, "group": "real", "name": "stsb_477", "text": "A man is riding a skateboard."}
+{"idx": 498, "group": "real", "name": "stsb_478", "text": "A woman is cutting a potato."}
+{"idx": 499, "group": "real", "name": "stsb_479", "text": "A woman is taking a shower."}
+{"idx": 500, "group": "real", "name": "stsb_480", "text": "A man is riding a white horse."}
+{"idx": 501, "group": "real", "name": "stsb_481", "text": "A  man is dancing."}
+{"idx": 502, "group": "real", "name": "stsb_482", "text": "A man is shooting off a gun."}
+{"idx": 503, "group": "real", "name": "stsb_483", "text": "A man is swinging from a rope attached to the ceiling."}
+{"idx": 504, "group": "real", "name": "stsb_484", "text": "A man is swinging on a rope."}
+{"idx": 505, "group": "real", "name": "stsb_485", "text": "A woman is riding a horse on a beach."}
+{"idx": 506, "group": "real", "name": "stsb_486", "text": "A man is carrying another man on his back."}
+{"idx": 507, "group": "real", "name": "stsb_487", "text": "A man holds a small animal in one hand."}
+{"idx": 508, "group": "real", "name": "stsb_488", "text": "A man shows off a small monkey."}
+{"idx": 509, "group": "real", "name": "stsb_489", "text": "A person is folding a square paper piece."}
+{"idx": 510, "group": "real", "name": "stsb_490", "text": "A person is frying meat in a pan."}
+{"idx": 511, "group": "real", "name": "stsb_491", "text": "A person is holding a skunk."}
+{"idx": 512, "group": "real", "name": "stsb_492", "text": "A chimpanzee is hurting a woman."}
+{"idx": 513, "group": "real", "name": "stsb_493", "text": "The woman is peeling shrimp."}
+{"idx": 514, "group": "real", "name": "stsb_494", "text": "The man is holding a lemur."}
+{"idx": 515, "group": "real", "name": "stsb_495", "text": "Two zebras are playing."}
+{"idx": 516, "group": "real", "name": "stsb_496", "text": "Zebras are socializing."}
+{"idx": 517, "group": "real", "name": "stsb_497", "text": "A woman is slicing butter."}
+{"idx": 518, "group": "real", "name": "stsb_498", "text": "Some men are playing guitars."}
+{"idx": 519, "group": "real", "name": "stsb_499", "text": "Three men are playing guitars and singing together."}
+{"idx": 520, "group": "real", "name": "stsb_500", "text": "The elephants sprayed water on themselves."}
+{"idx": 521, "group": "real", "name": "stsb_501", "text": "Elephants spray themselves with water."}
+{"idx": 522, "group": "real", "name": "stsb_502", "text": "A dog sat at the counter of a store."}
+{"idx": 523, "group": "real", "name": "stsb_503", "text": "The dog is standing at the counter."}
+{"idx": 524, "group": "real", "name": "stsb_504", "text": "Someone drills a hole in a strip of wood with a power drill."}
+{"idx": 525, "group": "real", "name": "stsb_505", "text": "A man drills a hole in a piece of wood."}
+{"idx": 526, "group": "real", "name": "stsb_506", "text": "A woman is slicing some vegetables."}
+{"idx": 527, "group": "real", "name": "stsb_507", "text": "A badger is burrowing a hole."}
+{"idx": 528, "group": "real", "name": "stsb_508", "text": "A badger is digging the earth."}
+{"idx": 529, "group": "real", "name": "stsb_509", "text": "A woman is water skiing on a lake."}
+{"idx": 530, "group": "real", "name": "stsb_510", "text": "A girl is playing a violin."}
+{"idx": 531, "group": "real", "name": "stsb_511", "text": "A helicopter is landing on a helipad."}

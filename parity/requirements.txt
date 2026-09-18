@@ -1,0 +1,10 @@
+# Parity harness only. Not needed to build or use the library.
+#
+# The reference arm needs torch (~910 MB); it is why this repository is separate
+# from cyborgdb-core, whose CI must never pull it.
+sentence-transformers>=3.0
+torch>=2.0
+onnxruntime>=1.20
+tokenizers>=0.21
+numpy>=1.24
+PyYAML>=6.0
