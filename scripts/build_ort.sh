@@ -3,7 +3,7 @@
 # Builds ONNX Runtime as static archives, merges them into one library, and
 # verifies the result links. Output lands in .ort/install.
 #
-# Phases run independently:  build_ort.sh [build|merge|isolate|verify|all]
+# Phases run independently:  build_ort.sh [build|merge|isolate|verify|vendor|all]
 
 set -euo pipefail
 
@@ -11,6 +11,12 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SRC="$ROOT/.ort/src"
 BUILD="${ORT_BUILD_DIR:-$ROOT/.ort/build}"
 INSTALL="${ORT_INSTALL_DIR:-$ROOT/.ort/install}"
+
+# Committed per platform so a consumer never builds ONNX Runtime. Microsoft's
+# releases cannot be used: they are shared libraries, built without RTTI to match
+# a consumer's ABI and without contrib ops, and are not symbol-isolated.
+PLATFORM="${ORT_PLATFORM:-$(uname -s | tr 'A-Z' 'a-z')-$(uname -m | sed 's/x86_64/amd64/; s/aarch64/arm64/')}"
+VENDOR="${ORT_VENDOR_DIR:-$ROOT/onnxruntime}"
 CONFIG="${CONFIG:-Release}"
 PHASE="${1:-all}"
 
@@ -147,7 +153,10 @@ isolate() {
       -o "$object" "$merged" 2>&1 | grep -v "not 4-byte aligned" || true
   else
     printf 'OrtGetApiBase\nOrtSessionOptionsAppendExecutionProvider_CPU\n' > "$keep"
-    ld -r --whole-archive "$merged" --no-whole-archive -o "$object"
+    # Some hand-written assembly carries no .note.GNU-stack marker, so the
+    # linker conservatively marks the stack executable and every consumer
+    # inherits it. Assert non-executable here rather than leaving it to them.
+    ld -r -z noexecstack --whole-archive "$merged" --no-whole-archive -o "$object"
     objcopy --keep-global-symbols="$keep" "$object"
   fi
 
@@ -181,11 +190,29 @@ EOF
   rm -rf "$tmp"
 }
 
+# Copies the isolated archive and headers into the tree. Headers are identical
+# across platforms, so only the archive is per-platform.
+vendor() {
+  mkdir -p "$VENDOR/prebuilt/$PLATFORM" "$VENDOR/include"
+  cp "$INSTALL/lib/libonnxruntime_isolated.a" \
+     "$VENDOR/prebuilt/$PLATFORM/libonnxruntime.a"
+  cp "$INSTALL"/include/*.h "$VENDOR/include/"
+
+  local exported
+  exported="$(nm -g --defined-only "$VENDOR/prebuilt/$PLATFORM/libonnxruntime.a" 2>/dev/null \
+    | awk '$2 ~ /^[TDBRWVS]$/ {print $3}' | sed 's/^_//' | sort -u)"
+  echo "$VENDOR/prebuilt/$PLATFORM/libonnxruntime.a: $(wc -c < "$VENDOR/prebuilt/$PLATFORM/libonnxruntime.a") bytes"
+  printf '  %s\n' $exported
+  [[ "$(echo "$exported" | wc -l | tr -d ' ')" -le 2 ]] || {
+    echo "archive exports more than the public C API" >&2; exit 1; }
+}
+
 case "$PHASE" in
   build)   build ;;
   merge)   merge ;;
   isolate) isolate ;;
   verify)  verify ;;
-  all)     build && merge && isolate && verify ;;
-  *)       echo "usage: $0 [build|merge|isolate|verify|all]" >&2; exit 2 ;;
+  vendor)  vendor ;;
+  all)     build && merge && isolate && verify && vendor ;;
+  *)       echo "usage: $0 [build|merge|isolate|verify|vendor|all]" >&2; exit 2 ;;
 esac

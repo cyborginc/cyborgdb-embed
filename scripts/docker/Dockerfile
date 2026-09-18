@@ -9,6 +9,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       ca-certificates \
       binutils \
       file \
+      libcurl4-openssl-dev \
+      libssl-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # The repository is bind-mounted, so git refuses to operate on it as another user.

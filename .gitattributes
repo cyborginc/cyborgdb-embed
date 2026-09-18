@@ -14,3 +14,6 @@ tokenizer/prebuilt/**/*.a     binary linguist-vendored
 
 # Tests
 tests/**            linguist-vendored
+# Prebuilt ONNX Runtime archives, built by scripts/build_ort.sh per platform.
+onnxruntime/prebuilt/**/*.a   binary linguist-vendored
+onnxruntime/include/**        linguist-vendored
