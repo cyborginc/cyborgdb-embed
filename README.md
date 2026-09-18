@@ -21,7 +21,9 @@ FetchContent_MakeAvailable(cyborgdb_embed)
 target_link_libraries(your_target PRIVATE cyborgdb::embed)
 ```
 
-ONNX Runtime is built from pinned source and linked statically. There is no shared library to ship or install.
+Everything links statically. ONNX Runtime and the HuggingFace tokenizer are committed as prebuilt archives under `onnxruntime/prebuilt/` and `tokenizer/prebuilt/`. There is no shared library to ship or install, and nothing is downloaded at configure time.
+
+Linux builds need `libcurl` and OpenSSL development headers (`libcurl4-openssl-dev`, `libssl-dev` on Debian and Ubuntu).
 
 ## Use
 
@@ -47,11 +49,22 @@ The session cache is process-wide, so opening one model from many threads holds 
 
 ## Supported models
 
-<!-- TODO: generate from registry.yaml -->
+Defined in `registry.yaml`, which pins the upstream revision, the exact ONNX file and its digest, dimension, pooling mode, normalization, `max_seq_length`, and prefixes for every model.
 
-| Model | Dim | Pooling | Max tokens |
-| --- | --- | --- | --- |
-| _TBD_ | | | |
+| Model                                   | Dim | Max tokens | Pooling | Prefixes | Parity |
+| --------------------------------------- | ---: | ---: | --- | --- | --- |
+| `sentence-transformers/all-MiniLM-L6-v2` | 384 | 256 | mean | — | numerically-equivalent |
+| `sentence-transformers/all-MiniLM-L12-v2` | 384 | 128 | mean | — | numerically-equivalent |
+| `sentence-transformers/all-mpnet-base-v2` | 768 | 384 | mean | — | numerically-equivalent |
+| `BAAI/bge-small-en-v1.5`                | 384 | 512 | cls | yes | numerically-equivalent |
+| `BAAI/bge-base-en-v1.5`                 | 768 | 512 | cls | yes | numerically-equivalent |
+| `BAAI/bge-large-en-v1.5`                | 1024 | 512 | cls | yes | numerically-equivalent |
+| `intfloat/e5-small-v2`                  | 384 | 512 | mean | yes | numerically-equivalent |
+| `intfloat/e5-base-v2`                   | 768 | 512 | mean | yes | numerically-equivalent |
+| `intfloat/e5-large-v2`                  | 1024 | 512 | mean | yes | numerically-equivalent |
+| `intfloat/multilingual-e5-small`        | 384 | 512 | mean | yes | numerically-equivalent |
+
+Parity is measured against `sentence-transformers`
 
 ## Downloading and caching
 
@@ -86,42 +99,34 @@ Every supported model is compared against real `sentence-transformers` output on
 
 Bit-identical output is not achievable across different BLAS implementations, so equivalence is measured rather than assumed. Verdicts are reported separately for real prose and for degenerate inputs (empty, whitespace-only, emoji, right-to-left), because a handful of pathological strings should not be able to disguise whether ordinary text matches.
 
-<!-- TODO: current parity results -->
-
-| Model | CPU | CoreML |
-| --- | --- | --- |
-| _TBD_ | | |
-
 ## Memory
 
-Sessions are cached and shared: opening the same model many times holds **one** copy of the weights.
+Sessions are shared: opening the same model from many indexes holds one copy of the weights, and the last handle released frees them. There is no retention beyond use, so resident memory is a function of what is open rather than of an eviction policy.
 
-The cache is keyed by `(model, registry version, execution provider)`, bounded by resident bytes with an idle timeout, and evicts only models nothing currently holds open. Resident memory exceeds the weights because ONNX Runtime's allocation arena grows to the largest batch and sequence it has seen and does not shrink — the arena is configured for predictable rather than minimal footprint, with maximum batch and sequence length capped.
+Most memory is not weights. It is the activations of in-flight work, which scale with the number of sentences being embedded at once times the padded sequence length — so a batch mixing one long document with short ones costs as much per row as the longest. Batches are therefore formed against a token budget over length-sorted input rather than a fixed row count.
 
-<!-- TODO: fill from release benchmark -->
+Measured on darwin/arm64, batch 8, embedding a corpus with sequences up to 512 tokens:
 
-| Model | Weights | Resident (1 session) | Resident (16 concurrent) |
-| --- | --- | --- | --- |
-| _TBD_ | | | |
+| Model | Dim | Peak RSS, 1 caller | Peak RSS, 8 callers |
+| --- | ---: | ---: | ---: |
+| `bge-small-en-v1.5` | 384 | 835 MB | 3281 MB |
+| `bge-base-en-v1.5` | 768 | 1146 MB | 3366 MB |
+| `bge-large-en-v1.5` | 1024 | 2436 MB | 3106 MB |
 
 ## Performance
 
-<!-- TODO: fill from release benchmark -->
+Same machine and batch size. Throughput is sentences per second; latency is per call.
 
-| Model | Dim | p50 batch 8 | p50 batch 32 |
-| --- | --- | --- | --- |
-| _TBD_ | | | |
+| Model | 1 caller | 8 callers | p50 (1 caller) | p50 (8 callers) |
+| --- | ---: | ---: | ---: | ---: |
+| `bge-small-en-v1.5` | 394/s | 2026/s | 7.9 ms | 11.4 ms |
+| `bge-base-en-v1.5` | 212/s | 555/s | 19.8 ms | 38.0 ms |
+| `bge-large-en-v1.5` | 32/s | 198/s | 65.6 ms | 131.0 ms |
 
-Intra-op threading defaults to 1. Parallelism is expected to come from concurrent callers rather than from splitting a single request across cores, which reaches the same throughput at a fraction of the memory.
 
 ## Size
 
-| | Raw | Compressed |
-| --- | ---: | ---: |
-| Library, linked | ~8.5 MB | ~3.2 MB |
-| + CoreML | +1.1 MB | +0.4 MB |
-
-Measured on darwin/arm64 against ONNX Runtime v1.30.0.
+A statically linked executable using this library, stripped and dead-stripped, is 16.9 MB on darwin/arm64.
 
 ## Execution providers
 

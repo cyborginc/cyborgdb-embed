@@ -1,5 +1,9 @@
 # Per-change gate: the library builds, its symbol surface is clean, and its
 # vectors still match sentence-transformers.
+#
+# ONNX Runtime and the tokenizer are committed as prebuilt archives, so nothing
+# here builds them. scripts/build_ort.sh and scripts/build_tokenizer.sh
+# regenerate them when a version is bumped.
 name: ci
 
 on:
@@ -23,22 +27,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # ONNX Runtime takes 20-30 minutes to build from source, so it is cached
-      # against the recipe rather than rebuilt per run.
-      - name: cache onnxruntime
-        id: ort-cache
-        uses: actions/cache@v4
-        with:
-          path: .ort/install
-          key: ort-${{ matrix.platform }}-${{ hashFiles('scripts/build_ort.sh', 'scripts/redundant_archives.py') }}
+      - if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libcurl4-openssl-dev libssl-dev
 
-      - if: steps.ort-cache.outputs.cache-hit != 'true'
-        run: ./scripts/build_ort.sh all
-
-      # A model that is already cached is not downloaded again, and the corpus
-      # run needs both the graph and the tokenizer.
-      - name: cache models
-        uses: actions/cache@v4
+      # Model files are downloaded on first use and keyed by pinned revision, so
+      # a re-pin invalidates rather than serving stale weights.
+      - uses: actions/cache@v4
         with:
           path: ~/.cache/cyborgdb-embed
           key: models-${{ hashFiles('registry.yaml') }}
@@ -53,39 +47,47 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: cache onnxruntime
-        id: ort-cache
-        uses: actions/cache@v4
-        with:
-          path: .ort/install
-          key: ort-linux-amd64-${{ hashFiles('scripts/build_ort.sh', 'scripts/redundant_archives.py') }}
-
-      - if: steps.ort-cache.outputs.cache-hit != 'true'
-        run: ./scripts/build_ort.sh all
+      - run: sudo apt-get update && sudo apt-get install -y libcurl4-openssl-dev libssl-dev
 
       # Rebuilds what the consuming project vendors, at its pins, so the audit
       # reflects a real link rather than a guess.
       - run: ./scripts/build_core_deps.sh
 
-      # ELF keeps hidden symbols global for static-archive resolution, so this
-      # is not something a macOS run can vouch for: the same archives collide on
+      # ELF keeps hidden symbols global for static-archive resolution, so this is
+      # not something a macOS run can vouch for: the same archives collide on
       # 1,748 strong symbols here and none on Darwin.
-      - name: no symbol overlap with a consuming project
+      - name: onnxruntime does not collide with a consuming project
         run: |
           mapfile -t deps < <(find .ort/core-deps/lib -name '*.a' | sort -u)
           python3 scripts/symbol_diff.py \
-            --a .ort/install/lib/libonnxruntime_isolated.a \
+            --a onnxruntime/prebuilt/linux-amd64/libonnxruntime.a \
             --b "${deps[@]}" --label-a onnxruntime --label-b core-deps
 
-      - name: tokenizer exports only its C API
+      # Every archive must export its public entry points and nothing else.
+      # Anything more means a vendored runtime reaches a consumer's link.
+      - name: vendored archives export only their public API
         run: |
-          for archive in tokenizer/prebuilt/*/libcyborgdb_tokenizer.a; do
-            found=$(nm -g --defined-only "$archive" 2>/dev/null \
-              | awk '$2 ~ /^[TDBRWV]$/ {print $3}' | sort -u | wc -l) || true
-            echo "$archive: $found exported"
-            [ "$found" -le 3 ] || { echo "tokenizer leaks symbols"; exit 1; }
+          check() {
+            local found
+            found=$(nm -g --defined-only "$1" 2>/dev/null \
+              | awk '$2 ~ /^[TDBRWV]$/ {print $3}' | sort -u)
+            echo "$1: $(echo "$found" | tr '\n' ' ')"
+            [ "$(echo "$found" | wc -l)" -le "$2" ] || { echo "leaks symbols"; exit 1; }
+          }
+          for a in onnxruntime/prebuilt/*/libonnxruntime.a; do check "$a" 2; done
+          for a in tokenizer/prebuilt/*/libcyborgdb_tokenizer.a; do check "$a" 3; done
+
+      # Hand-written assembly without a .note.GNU-stack marker makes the linker
+      # mark the stack executable, and consumers inherit it.
+      - name: archives do not require an executable stack
+        run: |
+          for a in onnxruntime/prebuilt/linux-*/libonnxruntime.a \
+                   tokenizer/prebuilt/linux-*/libcyborgdb_tokenizer.a; do
+            if readelf -lW "$a" 2>/dev/null | grep -q 'GNU_STACK.*RWE'; then
+              echo "$a requires an executable stack"; exit 1
+            fi
           done
+          echo "ok"
 
   registry:
     runs-on: ubuntu-latest

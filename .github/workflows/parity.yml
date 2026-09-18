@@ -83,11 +83,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/cache@v4
-        with:
-          path: .ort/install
-          key: ort-linux-amd64-${{ hashFiles('scripts/build_ort.sh', 'scripts/redundant_archives.py') }}
-
       # Torch weights and ONNX graphs are gigabytes per model. Keyed on the
       # pinned revision so a re-pin invalidates rather than serving stale weights.
       - uses: actions/cache@v4
@@ -97,9 +92,7 @@ jobs:
             ~/.cache/cyborgdb-embed
           key: weights-${{ matrix.model }}-${{ hashFiles('registry.yaml') }}
 
-      - run: ./scripts/build_ort.sh all
-        if: hashFiles('.ort/install/lib/libonnxruntime_isolated.a') == ''
-
+      - run: sudo apt-get update && sudo apt-get install -y libcurl4-openssl-dev libssl-dev
       - run: pip install -r tests/parity/requirements.txt
       - run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build -j
 

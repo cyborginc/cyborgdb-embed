@@ -3,7 +3,7 @@
 # Builds ONNX Runtime as static archives, merges them into one library, and
 # verifies the result links. Output lands in .ort/install.
 #
-# Phases run independently:  build_ort.sh [build|merge|isolate|verify|vendor|all]
+# Phases run independently:  build_ort.sh [fetch|build|merge|isolate|verify|vendor|all]
 
 set -euo pipefail
 
@@ -18,6 +18,9 @@ INSTALL="${ORT_INSTALL_DIR:-$ROOT/.ort/install}"
 PLATFORM="${ORT_PLATFORM:-$(uname -s | tr 'A-Z' 'a-z')-$(uname -m | sed 's/x86_64/amd64/; s/aarch64/arm64/')}"
 VENDOR="${ORT_VENDOR_DIR:-$ROOT/onnxruntime}"
 CONFIG="${CONFIG:-Release}"
+# Pinned: the vendored archives are the output of this script, so the version
+# that produced them has to be reproducible from it.
+ORT_VERSION="${ORT_VERSION:-v1.30.0}"
 PHASE="${1:-all}"
 
 if [[ "$(uname)" == "Darwin" ]]; then
@@ -26,7 +29,18 @@ else
   JOBS="$(nproc)"
 fi
 
+# Clones the pinned source if it is absent. Nothing else in the repository
+# depends on it; the committed archives are what consumers build against.
+fetch() {
+  [[ -d "$SRC" ]] && return 0
+  mkdir -p "$(dirname "$SRC")"
+  git clone --depth 1 --branch "$ORT_VERSION" --recurse-submodules \
+    --shallow-submodules https://github.com/microsoft/onnxruntime.git "$SRC"
+}
+
 build() {
+  fetch
+
   local defines=(
     # --skip_tests only skips running them; this is what stops them building.
     onnxruntime_BUILD_UNIT_TESTS=OFF
@@ -208,11 +222,12 @@ vendor() {
 }
 
 case "$PHASE" in
+  fetch)   fetch ;;
   build)   build ;;
   merge)   merge ;;
   isolate) isolate ;;
   verify)  verify ;;
   vendor)  vendor ;;
   all)     build && merge && isolate && verify && vendor ;;
-  *)       echo "usage: $0 [build|merge|isolate|verify|vendor|all]" >&2; exit 2 ;;
+  *)       echo "usage: $0 [fetch|build|merge|isolate|verify|vendor|all]" >&2; exit 2 ;;
 esac
