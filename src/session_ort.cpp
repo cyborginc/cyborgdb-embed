@@ -68,13 +68,14 @@ void l2_normalize(float* vectors, std::size_t rows, std::size_t dim) {
 class OrtSession final : public Session {
  public:
   OrtSession(const RegistryEntry& registry_entry, Provider used_provider,
-             Ort::Session&& session, std::unique_ptr<Tokenizer> tokenizer,
-             bool needs_token_type_ids)
+             Precision used_precision, Ort::Session&& session,
+             std::unique_ptr<Tokenizer> tokenizer, bool needs_token_type_ids)
       : session_(std::move(session)),
         tokenizer_(std::move(tokenizer)),
         needs_token_type_ids_(needs_token_type_ids) {
     entry = &registry_entry;
     provider = used_provider;
+    precision = used_precision;
   }
 
   Status encode(const std::string_view* texts, std::size_t n,
@@ -164,8 +165,9 @@ Status OrtSession::encode(const std::string_view* texts, std::size_t n,
 
 }  // namespace
 
-Status make_ort_session(const RegistryEntry& entry, Provider provider, int threads,
-                        const std::string& graph, const std::string& tokenizer_json,
+Status make_ort_session(const RegistryEntry& entry, Provider provider,
+                        Precision precision, int threads, const std::string& graph,
+                        const std::string& tokenizer_json,
                         std::shared_ptr<Session>& out) {
   std::unique_ptr<Tokenizer> tokenizer;
   if (Status status = Tokenizer::load(tokenizer_json, entry.info.max_seq_length,
@@ -193,7 +195,7 @@ Status make_ort_session(const RegistryEntry& entry, Provider provider, int threa
       }
     }
 
-    out = std::make_shared<OrtSession>(entry, provider, std::move(session),
+    out = std::make_shared<OrtSession>(entry, provider, precision, std::move(session),
                                        std::move(tokenizer), needs_token_type_ids);
   } catch (const Ort::Exception& error) {
     return {StatusCode::ModelLoadFailed, error.what()};

@@ -2,11 +2,11 @@
 
 Text embedding in C++, numerically equivalent to `sentence-transformers`.
 
-A static library built on ONNX Runtime. Load a supported embedding model, get the same vectors `sentence-transformers` would produce, with no Python at runtime and nothing to install alongside your binary.
+A static library built on ONNX Runtime. Load a supported embedding model from HF, get the same vectors `sentence-transformers` would produce, with no Python at runtime and nothing to install alongside your binary.
 
 ## Why
 
-Running embedding models outside Python usually means reimplementing the parts of `sentence-transformers` that are easy to get subtly wrong — pooling mode, truncation length, normalization, query/document prefixes. Getting any of them wrong produces plausible vectors that quietly degrade retrieval rather than failing.
+Running embedding models outside Python usually means reimplementing the parts of `sentence-transformers` that are easy to get subtly wrong (pooling mode, truncation length, normalization, query/document prefixes...). Getting any of them wrong produces plausible vectors that quietly degrade retrieval rather than failing.
 
 This library pins those choices per model in a registry, resolves the model from its upstream repository at a fixed revision, and verifies every supported model against real `sentence-transformers` output on every release.
 
@@ -41,17 +41,11 @@ std::vector<float> out(docs.size() * model.dimension());
 model.embed_documents(docs.data(), docs.size(), out.data(), out.size());
 ```
 
-Models are named by an enum rather than a string, so a typo is a compile error and the supported set is visible to every binding.
+Documents and queries are separate calls because several models expect asymmetric prefixes (e.g., `query: ` / `passage: `).
 
-Documents and queries are separate calls because several models expect asymmetric prefixes — e5 wants `query: ` / `passage: `, bge wants an instruction prefix on queries. Applying the wrong one degrades retrieval without erroring, so the API does not let you pass a flag and get it backwards.
-
-Every entry point returns a status. A tokenizer failure, a failed download, a digest that no longer matches, and an undersized output buffer are all reachable, and none of them should surface as a plausible-looking vector.
-
-The session cache is process-wide, so opening one model from many indexes holds a single copy of the weights. An `Embedder` is a handle onto that session: copies share it, and it is safe to use from many threads because each call writes only into its own output buffer.
+The session cache is process-wide, so opening one model from many threads holds a single copy of the weights. An `Embedder` is a handle onto that session: copies share it, and it is safe to use from many threads because each call writes only into its own output buffer.
 
 ## Supported models
-
-Defined in `registry.yaml`, which pins the upstream revision, ONNX artifact, dimension, pooling mode, normalization, `max_seq_length`, and prefixes for every model.
 
 <!-- TODO: generate from registry.yaml -->
 
@@ -59,13 +53,9 @@ Defined in `registry.yaml`, which pins the upstream revision, ONNX artifact, dim
 | --- | --- | --- | --- |
 | _TBD_ | | | |
 
-Unlisted models can be used via an override, which must supply the same metadata explicitly rather than just a model ID — guessing it is how silent drift happens. Unsupported and unverified.
-
 ## Downloading and caching
 
-Models are downloaded on first use and cached on disk. Weights are fp32, matching what `sentence-transformers` loads by default — the equivalence guarantee is against that reference, so the default precision is not configurable.
-
-Each supported model pins an upstream revision and a file digest, both verified before the graph is loaded. A repository that changes underneath you will fail loudly rather than silently returning different vectors.
+Models are downloaded on first use and cached on disk. Weights are fp32, matching what `sentence-transformers` loads by default.
 
 ### Offline and air-gapped use
 

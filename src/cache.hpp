@@ -22,14 +22,14 @@ class SessionCache {
   CacheConfig config() const;
 
   // Concurrent misses on one key load once; the rest wait on that load.
-  Status acquire(const RegistryEntry&, Provider, int threads,
+  Status acquire(const RegistryEntry&, Provider, Precision, int threads,
                  std::shared_ptr<Session>& out);
 
   std::vector<LoadedModel> loaded() const;
   CacheStats stats() const noexcept;
 
   // Drops the cache's reference. A session a caller still holds stays alive.
-  Status drop(ModelId, Provider);
+  Status drop(ModelId, Provider, Precision);
 
  private:
   SessionCache() = default;
@@ -37,9 +37,11 @@ class SessionCache {
   struct Key {
     ModelId model;
     Provider provider;
+    Precision precision;
     bool operator<(const Key& other) const {
-      return model != other.model ? model < other.model
-                                  : provider < other.provider;
+      if (model != other.model) return model < other.model;
+      if (provider != other.provider) return provider < other.provider;
+      return precision < other.precision;
     }
   };
 

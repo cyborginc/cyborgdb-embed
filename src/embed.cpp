@@ -54,6 +54,12 @@ bool provider_available(Provider provider) noexcept {
 
 std::string runtime_version() { return detail::ort_version(); }
 
+bool precision_available(ModelId, Precision precision) noexcept {
+  // The registry pins one graph per model today. Adding a quantised variant is
+  // a registry change plus its own parity run, not an API change.
+  return precision == Precision::Fp32;
+}
+
 // ---------------------------------------------------------------------------
 // Embedder
 // ---------------------------------------------------------------------------
@@ -81,7 +87,7 @@ Identity Embedder::identity() const noexcept {
   if (!valid()) return {};
   const detail::Session& session = *impl_->session;
   return {session.entry->info.name, session.entry->info.revision,
-          detail::registry_version(), session.provider};
+          detail::registry_version(), session.provider, session.precision};
 }
 
 Status Embedder::embed_documents(const std::string_view* texts, std::size_t n,
@@ -109,7 +115,7 @@ Status open(ModelId id, const Options& options, Embedder& out) {
 
   std::shared_ptr<detail::Session> session;
   if (Status status = detail::SessionCache::instance().acquire(
-          *entry, options.provider, options.threads, session);
+          *entry, options.provider, options.precision, options.threads, session);
       !status) {
     return status;
   }
@@ -136,8 +142,8 @@ CacheStats cache_stats() noexcept {
   return detail::SessionCache::instance().stats();
 }
 
-Status unload(ModelId id, Provider provider) {
-  return detail::SessionCache::instance().drop(id, provider);
+Status unload(ModelId id, Provider provider, Precision precision) {
+  return detail::SessionCache::instance().drop(id, provider, precision);
 }
 
 }  // namespace cyborgdb::embed

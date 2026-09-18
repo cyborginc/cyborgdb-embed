@@ -37,7 +37,8 @@ add_library(cyborgdb_embed STATIC
   src/embed.cpp
   src/ort_api.cpp
   src/tokenizer.cpp
-  src/session.cpp)
+  src/session.cpp
+  src/session_ort.cpp)
 add_library(cyborgdb::embed ALIAS cyborgdb_embed)
 
 target_include_directories(cyborgdb_embed

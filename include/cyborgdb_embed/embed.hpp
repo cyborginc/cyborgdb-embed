@@ -64,6 +64,7 @@ enum class StatusCode {
   TokenizerFailed,
   InferenceFailed,
   OutputTooSmall,
+  PrecisionUnavailable,
 };
 
 struct Status {
@@ -88,6 +89,20 @@ enum class Provider {
 
 bool provider_available(Provider) noexcept;
 
+// Weight precision. A quantised graph is a different graph: it produces
+// different vectors, so precision carries the same obligations a provider does
+// — its own parity verdict, its own golden vectors, and a place in the identity
+// an index records.
+//
+// Only Fp32 is supported today; the others are rejected rather than approximated.
+enum class Precision {
+  Fp32,
+  Fp16,
+  Int8,
+};
+
+bool precision_available(ModelId, Precision) noexcept;
+
 // ---------------------------------------------------------------------------
 // Embedder
 // ---------------------------------------------------------------------------
@@ -97,6 +112,7 @@ struct Options {
   // concurrent callers, which reaches the same throughput on less memory.
   int threads = 1;
   Provider provider = Provider::CPU;
+  Precision precision = Precision::Fp32;
 };
 
 // What an index must record to reject vectors it cannot compare against.
@@ -106,6 +122,7 @@ struct Identity {
   std::string_view revision;
   std::string_view registry_version;
   Provider provider;
+  Precision precision;
 };
 
 // A handle onto a shared session. Copies share it, and the session outlives
@@ -176,6 +193,7 @@ Status configure_cache(const CacheConfig&);
 struct LoadedModel {
   ModelId model;
   Provider provider;
+  Precision precision;
   std::size_t resident_bytes;
   std::chrono::seconds idle_for;
   int references;             // 0 means only the cache holds it
@@ -192,7 +210,7 @@ CacheStats cache_stats() noexcept;
 
 // Drops the cache's reference. Sessions still held by a caller survive until
 // released.
-Status unload(ModelId, Provider);
+Status unload(ModelId, Provider, Precision = Precision::Fp32);
 
 // The ONNX Runtime build behind this library. Vectors are only comparable
 // across hosts running the same one, so a health endpoint should report it.

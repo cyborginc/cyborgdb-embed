@@ -30,8 +30,9 @@ CacheConfig SessionCache::config() const {
 }
 
 Status SessionCache::acquire(const RegistryEntry& entry, Provider provider,
-                             int threads, std::shared_ptr<Session>& out) {
-  const Key key{entry.info.id, provider};
+                             Precision precision, int threads,
+                             std::shared_ptr<Session>& out) {
+  const Key key{entry.info.id, provider, precision};
   std::shared_future<std::shared_ptr<Session>> pending;
   std::shared_ptr<std::promise<std::shared_ptr<Session>>> promise;
 
@@ -61,7 +62,8 @@ Status SessionCache::acquire(const RegistryEntry& entry, Provider provider,
       std::lock_guard<std::mutex> guard(mutex_);
       config = config_;
     }
-    const Status status = load_session(entry, provider, threads, config, session);
+    const Status status =
+        load_session(entry, provider, precision, threads, config, session);
     promise->set_value(status.ok() ? session : nullptr);
 
     std::lock_guard<std::mutex> guard(mutex_);
@@ -137,7 +139,8 @@ std::vector<LoadedModel> SessionCache::loaded() const {
   result.reserve(entries_.size());
   for (const auto& [key, entry] : entries_) {
     if (!entry.session) continue;
-    result.push_back({key.model, key.provider, entry.session->resident_bytes,
+    result.push_back({key.model, key.provider, key.precision,
+                      entry.session->resident_bytes,
                       idle_for(entry.last_used),
                       static_cast<int>(entry.session.use_count()) - 1});
   }
@@ -153,9 +156,9 @@ CacheStats SessionCache::stats() const noexcept {
   return {hits_, misses_, resident};
 }
 
-Status SessionCache::drop(ModelId model, Provider provider) {
+Status SessionCache::drop(ModelId model, Provider provider, Precision precision) {
   std::lock_guard<std::mutex> guard(mutex_);
-  auto it = entries_.find({model, provider});
+  auto it = entries_.find({model, provider, precision});
   if (it == entries_.end()) {
     return {StatusCode::InvalidArgument, "model is not loaded"};
   }

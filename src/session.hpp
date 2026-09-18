@@ -21,6 +21,7 @@ class Session {
 
   const RegistryEntry* entry = nullptr;
   Provider provider = Provider::CPU;
+  Precision precision = Precision::Fp32;
 
   // Weights plus the allocation arena, which grows to the largest batch and
   // sequence seen and does not shrink.
@@ -30,13 +31,13 @@ class Session {
 // Resolves the model, verifies it, and loads it. Blocking: downloads on a cold
 // cache. The cache passes its own configuration rather than being consulted from
 // here, which would be circular.
-Status load_session(const RegistryEntry&, Provider, int threads,
+Status load_session(const RegistryEntry&, Provider, Precision, int threads,
                     const CacheConfig&, std::shared_ptr<Session>& out);
 
 std::string_view registry_version() noexcept;
 
 // Defined in session_ort.cpp, which is the only place ONNX Runtime types appear.
-Status make_ort_session(const RegistryEntry&, Provider, int threads,
+Status make_ort_session(const RegistryEntry&, Provider, Precision, int threads,
                         const std::string& graph, const std::string& tokenizer_json,
                         std::shared_ptr<Session>& out);
 
