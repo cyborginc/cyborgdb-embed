@@ -1,0 +1,19 @@
+{
+  "_comment": [
+    "Upstream versions and the build number of the archives published for each.",
+    "The build number exists because a change to our build flags reissues an",
+    "archive without the upstream version moving, which is how the release tags",
+    "ort-1.30.0-1 and tokenizers-0.23.2-1 are formed.",
+    "",
+    "This is the only place either version is written. The build scripts, the",
+    "CMake fetch, and the release workflow all read it."
+  ],
+  "onnxruntime": {
+    "version": "1.30.0",
+    "build": 1
+  },
+  "tokenizers": {
+    "version": "0.23.2",
+    "build": 1
+  }
+}

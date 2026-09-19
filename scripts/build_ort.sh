@@ -18,9 +18,13 @@ INSTALL="${ORT_INSTALL_DIR:-$ROOT/.ort/install}"
 PLATFORM="${ORT_PLATFORM:-$(uname -s | tr 'A-Z' 'a-z')-$(uname -m | sed 's/x86_64/amd64/; s/aarch64/arm64/')}"
 VENDOR="${ORT_VENDOR_DIR:-$ROOT/onnxruntime}"
 CONFIG="${CONFIG:-Release}"
-# Pinned: the vendored archives are the output of this script, so the version
-# that produced them has to be reproducible from it.
-ORT_VERSION="${ORT_VERSION:-v1.30.0}"
+# versions.json is the single place either upstream version is written; this
+# script, the CMake fetch and the release workflow all read it.
+ORT_VERSION="${ORT_VERSION:-v$(python3 -c '
+import json, pathlib, sys
+root = pathlib.Path(sys.argv[1])
+print(json.loads((root / "versions.json").read_text())["onnxruntime"]["version"])
+' "$ROOT")}"
 PHASE="${1:-all}"
 
 if [[ "$(uname)" == "Darwin" ]]; then

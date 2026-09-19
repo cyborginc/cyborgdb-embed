@@ -22,7 +22,29 @@ PHASE="${1:-all}"
 
 EXPORTS=(cyborgdb_tokenizer_new cyborgdb_tokenizer_free cyborgdb_tokenizer_encode)
 
+# Cargo needs the version in Cargo.toml, but versions.json is what a person
+# edits, so the manifest is brought into line here rather than being a second
+# place to remember.
+sync_manifest() {
+  local want
+  want="$(python3 -c '
+import json, pathlib, sys
+root = pathlib.Path(sys.argv[1])
+print(json.loads((root / "versions.json").read_text())["tokenizers"]["version"])
+' "$ROOT")"
+  local have
+  have="$(sed -n 's/.*tokenizers = { version = "\([^"]*\)".*/\1/p' "$CRATE/Cargo.toml")"
+  if [[ "$want" != "$have" ]]; then
+    echo "syncing Cargo.toml to tokenizers $want (was $have)"
+    sed -i.bak "s|tokenizers = { version = \"[^\"]*\"|tokenizers = { version = \"$want\"|" \
+      "$CRATE/Cargo.toml"
+    rm -f "$CRATE/Cargo.toml.bak"
+  fi
+}
+
 build() {
+  sync_manifest
+
   # Neither LTO nor strip may be enabled in the release profile: LTO emits
   # bitcode that the partial link cannot read, and strip leaves it with no
   # symbol table to filter.
@@ -93,6 +115,7 @@ isolate() {
 }
 
 case "$PHASE" in
+  --sync-only) sync_manifest ;;
   build)   build ;;
   isolate) isolate ;;
   all)     build && isolate ;;

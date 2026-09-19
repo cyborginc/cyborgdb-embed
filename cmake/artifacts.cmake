@@ -12,12 +12,21 @@
 # They are also separate from library version tags, which avoids a circularity:
 # a library tag cannot contain digests of artifacts built by tagging it.
 #
+# Versions live in versions.json, which is the only place either is written.
 # To publish: push the component tag, let the release workflow build and upload,
 # then paste the digests it prints into this file.
 
-set(CYBORGDB_EMBED_ORT_TAG "ort-1.30.0-1"
+# Composed from versions.json rather than written here, so a version cannot be
+# bumped in one place and forgotten in another.
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/versions.json" _versions)
+string(JSON _ort_version GET "${_versions}" onnxruntime version)
+string(JSON _ort_build GET "${_versions}" onnxruntime build)
+string(JSON _tok_version GET "${_versions}" tokenizers version)
+string(JSON _tok_build GET "${_versions}" tokenizers build)
+
+set(CYBORGDB_EMBED_ORT_TAG "ort-${_ort_version}-${_ort_build}"
     CACHE STRING "Release tag for the ONNX Runtime archives")
-set(CYBORGDB_EMBED_TOKENIZER_TAG "tokenizers-0.23.2-1"
+set(CYBORGDB_EMBED_TOKENIZER_TAG "tokenizers-${_tok_version}-${_tok_build}"
     CACHE STRING "Release tag for the tokenizer archives")
 set(CYBORGDB_EMBED_ARTIFACT_REPO "https://github.com/cyborginc/cyborgdb-embed"
     CACHE STRING "Repository hosting the artifact releases")

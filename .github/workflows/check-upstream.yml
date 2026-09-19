@@ -27,7 +27,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          current=$(sed -n 's/^ORT_VERSION="${ORT_VERSION:-\(.*\)}"$/\1/p' scripts/build_ort.sh)
+          current=v$(./scripts/version.py onnxruntime)
           latest=$(gh release list --repo microsoft/onnxruntime --limit 20 --json tagName \
             --jq '[.[] | select(.tagName | test("^v[0-9]+\\.[0-9]+\\.[0-9]+$"))][0].tagName')
           echo "current=$current latest=$latest"
@@ -36,8 +36,14 @@ jobs:
 
       - if: steps.versions.outputs.latest != steps.versions.outputs.current
         run: |
-          sed -i 's|ORT_VERSION="${ORT_VERSION:-.*}"|ORT_VERSION="${ORT_VERSION:-${{ steps.versions.outputs.latest }}}"|' \
-            scripts/build_ort.sh
+          python3 - <<'PY'
+          import json, pathlib
+          p = pathlib.Path("versions.json")
+          d = json.loads(p.read_text())
+          d["onnxruntime"] = {"version": "${{ steps.versions.outputs.latest }}".lstrip("v"),
+                              "build": 1}
+          p.write_text(json.dumps(d, indent=2) + "\n")
+          PY
 
       - if: steps.versions.outputs.latest != steps.versions.outputs.current
         uses: peter-evans/create-pull-request@v6
@@ -55,7 +61,7 @@ jobs:
             Before releasing: the build flags are load-bearing and have broken on
             version changes before — `--disable_contrib_ops` breaks linux/arm64,
             and symbol isolation has to keep working on both object formats.
-          add-paths: scripts/build_ort.sh
+          add-paths: versions.json
 
   tokenizers:
     runs-on: ubuntu-latest
@@ -63,7 +69,7 @@ jobs:
       - uses: actions/checkout@v4
       - id: versions
         run: |
-          current=$(sed -n 's/.*tokenizers = { version = "\([^"]*\)".*/\1/p' tokenizer/Cargo.toml)
+          current=$(./scripts/version.py tokenizers)
           latest=$(curl -sS -H "User-Agent: cyborgdb-embed" \
             https://crates.io/api/v1/crates/tokenizers \
             | python3 -c 'import json,sys; print(json.load(sys.stdin)["crate"]["max_stable_version"])')
@@ -73,8 +79,14 @@ jobs:
 
       - if: steps.versions.outputs.latest != steps.versions.outputs.current
         run: |
-          sed -i 's|tokenizers = { version = "[^"]*"|tokenizers = { version = "${{ steps.versions.outputs.latest }}"|' \
-            tokenizer/Cargo.toml
+          python3 - <<'PY'
+          import json, pathlib
+          p = pathlib.Path("versions.json")
+          d = json.loads(p.read_text())
+          d["tokenizers"] = {"version": "${{ steps.versions.outputs.latest }}", "build": 1}
+          p.write_text(json.dumps(d, indent=2) + "\n")
+          PY
+          ./scripts/build_tokenizer.sh --sync-only 2>/dev/null || true
 
       - if: steps.versions.outputs.latest != steps.versions.outputs.current
         uses: peter-evans/create-pull-request@v6
@@ -91,4 +103,6 @@ jobs:
             **Run the parity suite before releasing.** A tokenizers release can
             change tokenisation, and that moves every vector — the symbol checks
             in the release workflow cannot see it.
-          add-paths: tokenizer/Cargo.toml
+          add-paths: |
+            versions.json
+            tokenizer/Cargo.toml

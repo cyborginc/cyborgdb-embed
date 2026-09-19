@@ -43,19 +43,20 @@ jobs:
       # script and Cargo.toml decides what is fetched, so that a local build
       # produces the same archive as a release. They must therefore agree, or a
       # tag would publish something other than what it claims.
-      - name: tag matches the pinned upstream version
+      # The tag names a version but does not select one: versions.json decides
+      # what is fetched and built, so a local build produces the same archive as
+      # a release. The tag must therefore agree with it.
+      - name: tag matches versions.json
         run: |
           tag="${{ github.ref_name }}"
-          if [[ "$tag" == ort-* ]]; then
-            want="${tag#ort-}"; want="${want%-*}"
-            have=$(sed -n 's/^ORT_VERSION="${ORT_VERSION:-v\(.*\)}"$/\1/p' scripts/build_ort.sh)
-          else
-            want="${tag#tokenizers-}"; want="${want%-*}"
-            have=$(sed -n 's/.*tokenizers = { version = "\([^"]*\)".*/\1/p' tokenizer/Cargo.toml)
-          fi
-          echo "tag says $want, pin says $have"
-          [ "$want" = "$have" ] || {
-            echo "tag and pin disagree; bump the pin or retag"; exit 1; }
+          case "$tag" in
+            ort-*) expected=$(./scripts/version.py onnxruntime --tag) ;;
+            *)     expected=$(./scripts/version.py tokenizers --tag) ;;
+          esac
+          echo "tag $tag, versions.json $expected"
+          [ "$tag" = "$expected" ] || {
+            echo "tag disagrees with versions.json; bump the build number there or retag"
+            exit 1; }
 
       - name: build
         run: |
