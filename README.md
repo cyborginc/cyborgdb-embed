@@ -2,30 +2,27 @@
 
 Text embedding in C++, numerically equivalent to `sentence-transformers`.
 
-A static library built on ONNX Runtime. Load a supported embedding model from HF, get the same vectors `sentence-transformers` would produce, with no Python at runtime and nothing to install alongside your binary.
+`cyborgdb-embed` is a static C++ library built on ONNX Runtime, with no Python runtime or shared-library dependencies.
 
-## Why
+“Numerically equivalent” means cosine similarity ≥ `1 - 1e-6` and max absolute difference < `1e-4`. Numerical equivalence does not imply bit-identical output across platforms or runtimes.
 
-Running embedding models outside Python usually means reimplementing the parts of `sentence-transformers` that are easy to get subtly wrong (pooling mode, truncation length, normalization, query/document prefixes...). Getting any of them wrong produces plausible vectors that quietly degrade retrieval rather than failing.
-
-This library pins those choices per model in a registry, resolves the model from its upstream repository at a fixed revision, and verifies every supported model against real `sentence-transformers` output on every release.
-
-## Integrate
+## Quick start
 
 ```cmake
 include(FetchContent)
-FetchContent_Declare(cyborgdb_embed
+
+FetchContent_Declare(
+  cyborgdb_embed
   GIT_REPOSITORY https://github.com/cyborg/cyborgdb-embed.git
-  GIT_TAG        v0.1.0)
+  GIT_TAG v0.1.0
+)
+
 FetchContent_MakeAvailable(cyborgdb_embed)
+
 target_link_libraries(your_target PRIVATE cyborgdb::embed)
 ```
 
-Everything links statically. ONNX Runtime and the HuggingFace tokenizer are committed as prebuilt archives under `onnxruntime/prebuilt/` and `tokenizer/prebuilt/`. There is no shared library to ship or install, and nothing is downloaded at configure time.
-
-Linux builds need `libcurl` and OpenSSL development headers (`libcurl4-openssl-dev`, `libssl-dev` on Debian and Ubuntu).
-
-## Use
+Dependencies are linked statically. Linux builds require `libcurl` and OpenSSL development headers (`libcurl4-openssl-dev` and `libssl-dev` on Debian/Ubuntu).
 
 ```cpp
 #include <cyborgdb_embed/embed.hpp>
@@ -33,122 +30,87 @@ Linux builds need `libcurl` and OpenSSL development headers (`libcurl4-openssl-d
 namespace embed = cyborgdb::embed;
 
 embed::Embedder model;
-if (auto s = embed::open(embed::ModelId::BgeBaseEnV15, embed::Options{}, model); !s) {
-  return s;  // unknown model, download failed, digest mismatch, load failed
+
+if (auto s = embed::open(
+        embed::ModelId::BgeBaseEnV15,
+        embed::Options{},
+        model);
+    !s) {
+  return s;
 }
 
-std::vector<std::string_view> docs = {"first passage", "second passage"};
-std::vector<float> out(docs.size() * model.dimension());
+std::vector<std::string_view> docs = {
+    "first passage",
+    "second passage",
+};
 
-model.embed_documents(docs.data(), docs.size(), out.data(), out.size());
+std::vector<float> out(
+    docs.size() * model.dimension());
+
+model.embed_documents(
+    docs.data(),
+    docs.size(),
+    out.data(),
+    out.size());
 ```
 
-Documents and queries are separate calls because several models expect asymmetric prefixes (e.g., `query: ` / `passage: `).
+Documents and queries use separate calls because some models require asymmetric prefixes such as `query:` and `passage:`.
 
-The session cache is process-wide, so opening one model from many threads holds a single copy of the weights. An `Embedder` is a handle onto that session: copies share it, and it is safe to use from many threads because each call writes only into its own output buffer.
+`Embedder` is cheap to copy and thread-safe. Copies of the same model share one in-process session and one copy of the weights.
 
 ## Supported models
 
-Defined in `registry.yaml`, which pins the upstream revision, the exact ONNX file and its digest, dimension, pooling mode, normalization, `max_seq_length`, and prefixes for every model.
+All supported models are verified against `sentence-transformers`.
 
-| Model                                   | Dim | Max tokens | Pooling | Prefixes | Parity |
-| --------------------------------------- | ---: | ---: | --- | --- | --- |
-| `sentence-transformers/all-MiniLM-L6-v2` | 384 | 256 | mean | — | numerically-equivalent |
-| `sentence-transformers/all-MiniLM-L12-v2` | 384 | 128 | mean | — | numerically-equivalent |
-| `sentence-transformers/all-mpnet-base-v2` | 768 | 384 | mean | — | numerically-equivalent |
-| `BAAI/bge-small-en-v1.5`                | 384 | 512 | cls | yes | numerically-equivalent |
-| `BAAI/bge-base-en-v1.5`                 | 768 | 512 | cls | yes | numerically-equivalent |
-| `BAAI/bge-large-en-v1.5`                | 1024 | 512 | cls | yes | numerically-equivalent |
-| `intfloat/e5-small-v2`                  | 384 | 512 | mean | yes | numerically-equivalent |
-| `intfloat/e5-base-v2`                   | 768 | 512 | mean | yes | numerically-equivalent |
-| `intfloat/e5-large-v2`                  | 1024 | 512 | mean | yes | numerically-equivalent |
-| `intfloat/multilingual-e5-small`        | 384 | 512 | mean | yes | numerically-equivalent |
+| Model                                     |  Dim | Max tokens | Pooling | Prefixes |
+| ----------------------------------------- | ---: | ---------: | ------- | -------- |
+| `sentence-transformers/all-MiniLM-L6-v2`  |  384 |        256 | mean    | —        |
+| `sentence-transformers/all-MiniLM-L12-v2` |  384 |        128 | mean    | —        |
+| `sentence-transformers/all-mpnet-base-v2` |  768 |        384 | mean    | —        |
+| `BAAI/bge-small-en-v1.5`                  |  384 |        512 | cls     | yes      |
+| `BAAI/bge-base-en-v1.5`                   |  768 |        512 | cls     | yes      |
+| `BAAI/bge-large-en-v1.5`                  | 1024 |        512 | cls     | yes      |
+| `intfloat/e5-small-v2`                    |  384 |        512 | mean    | yes      |
+| `intfloat/e5-base-v2`                     |  768 |        512 | mean    | yes      |
+| `intfloat/e5-large-v2`                    | 1024 |        512 | mean    | yes      |
+| `intfloat/multilingual-e5-small`          |  384 |        512 | mean    | yes      |
 
-Parity is measured against `sentence-transformers`
+Model configuration and pinned upstream revisions are defined in `registry.yaml`.
 
-## Downloading and caching
+## Model downloads and offline use
 
-Models are downloaded on first use and cached on disk. Weights are fp32, matching what `sentence-transformers` loads by default.
+Models are downloaded on first use and cached on disk.
 
-### Offline and air-gapped use
-
-The cache directory is set with `CYBORGDB_EMBED_CACHE`, defaulting to a per-user location. Nothing outside that directory is written, and nothing is fetched for a model already present in it.
-
-To run without network access, populate the cache on a connected machine and copy it to the target:
+For air-gapped deployment:
 
 ```bash
-# On a machine with network access
-cyborgdb-embed-fetch --model bge-base-en-v1.5 --cache ./embed-cache
+# On a connected machine
+cyborgdb-embed-fetch \
+  --model bge-base-en-v1.5 \
+  --cache ./embed-cache
 
-# On the air-gapped machine
+# On the target machine
 export CYBORGDB_EMBED_CACHE=/opt/cyborgdb/embed-cache
+export CYBORGDB_EMBED_OFFLINE=1
 ```
 
-Set `CYBORGDB_EMBED_OFFLINE=1` to fail immediately on a cache miss instead of attempting a download. Use this in production: it turns a missing model into a startup error rather than an unexpected network call on a request path.
+Set `CYBORGDB_EMBED_OFFLINE=1` to fail on a cache miss without attempting network access. `CYBORGDB_EMBED_ENDPOINT` overrides the download host.
 
-`CYBORGDB_EMBED_ENDPOINT` overrides the download host for an internal mirror.
+## Platform support
 
-## Correctness
-
-Every supported model is compared against real `sentence-transformers` output on a frozen corpus. Fast tests check committed golden vectors; a nightly job regenerates them from `sentence-transformers` and fails on drift.
-
-| Verdict | Criterion |
-| --- | --- |
-| `numerically-equivalent` | `cosine_min ≥ 1-1e-6`, `max_abs_diff < 1e-4` |
-| `retrieval-equivalent` | `cosine_min ≥ 0.9999`, `recall@10 ≥ 0.99` |
-
-Bit-identical output is not achievable across different BLAS implementations, so equivalence is measured rather than assumed. Verdicts are reported separately for real prose and for degenerate inputs (empty, whitespace-only, emoji, right-to-left), because a handful of pathological strings should not be able to disguise whether ordinary text matches.
-
-## Memory
-
-Sessions are shared: opening the same model from many indexes holds one copy of the weights, and the last handle released frees them. There is no retention beyond use, so resident memory is a function of what is open rather than of an eviction policy.
-
-Most memory is not weights. It is the activations of in-flight work, which scale with the number of sentences being embedded at once times the padded sequence length — so a batch mixing one long document with short ones costs as much per row as the longest. Batches are therefore formed against a token budget over length-sorted input rather than a fixed row count.
-
-Measured on darwin/arm64, batch 8, embedding a corpus with sequences up to 512 tokens:
-
-| Model | Dim | Peak RSS, 1 caller | Peak RSS, 8 callers |
-| --- | ---: | ---: | ---: |
-| `bge-small-en-v1.5` | 384 | 835 MB | 3281 MB |
-| `bge-base-en-v1.5` | 768 | 1146 MB | 3366 MB |
-| `bge-large-en-v1.5` | 1024 | 2436 MB | 3106 MB |
-
-## Performance
-
-Same machine and batch size. Throughput is sentences per second; latency is per call.
-
-| Model | 1 caller | 8 callers | p50 (1 caller) | p50 (8 callers) |
-| --- | ---: | ---: | ---: | ---: |
-| `bge-small-en-v1.5` | 394/s | 2026/s | 7.9 ms | 11.4 ms |
-| `bge-base-en-v1.5` | 212/s | 555/s | 19.8 ms | 38.0 ms |
-| `bge-large-en-v1.5` | 32/s | 198/s | 65.6 ms | 131.0 ms |
-
-
-## Size
-
-A statically linked executable using this library, stripped and dead-stripped, is 16.9 MB on darwin/arm64.
-
-## Execution providers
-
-CPU is the default and is statically linked. CoreML is available on darwin/arm64.
-
-**CUDA is not supported.** ONNX Runtime builds its CUDA provider as a loadable module that cannot be statically linked, and GPU acceleration only pays off for embedding at bulk-ingestion batch sizes rather than on a per-request path.
-
-Providers are not numerically neutral — CoreML may run fp16 — so each has its own parity results and golden vectors. If you store vectors, record which provider produced them; switching providers changes the output.
+CPU execution is supported today. CoreML and CUDA are planned for future releases.
 
 ## Development
 
 ```bash
 make build          # static library
-make test           # golden-vector tests, no Python required
-make parity         # full comparison vs sentence-transformers (needs torch + model weights)
+make test           # golden-vector tests; no Python required
+make parity         # compare against sentence-transformers
 make export MODEL=  # re-export a pooled ONNX graph
 make bench          # latency, concurrency, memory
 ```
 
-Adding a model means editing `registry.yaml` and regenerating, which needs PyYAML (`pip install -r scripts/requirements.txt`). Building the library does not: `src/registry_generated.hpp` is committed, so no Python is required to compile.
-
-See [SPEC.md](SPEC.md) for design rationale, the session cache design, required ONNX Runtime build flags, and known pitfalls.
+Python is only required for model regeneration and parity testing; building and using the library does not require it.
 
 ## License
 
