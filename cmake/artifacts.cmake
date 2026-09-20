@@ -34,12 +34,12 @@ set(CYBORGDB_EMBED_ARTIFACT_REPO "https://github.com/cyborginc/cyborgdb-embed"
 # sha256 of each published archive. A download that does not match is discarded:
 # these are binaries nobody can review, so the pin is what makes them trustable.
 set(CYBORGDB_EMBED_ARTIFACT_DIGESTS
-  "onnxruntime-darwin-arm64  PENDING"
-  "onnxruntime-linux-amd64   PENDING"
-  "onnxruntime-linux-arm64   PENDING"
-  "tokenizer-darwin-arm64    PENDING"
-  "tokenizer-linux-amd64     PENDING"
-  "tokenizer-linux-arm64     PENDING"
+  "onnxruntime-darwin-arm64  e81a9c366519ef267cc22bc85864a94592624af8d547d019f5e48b4a519c1b50"
+  "onnxruntime-linux-amd64   9d057d119b61300d630059007e23ce49602e4f1a97d5d0bd0f9dad968cd8fdd0"
+  "onnxruntime-linux-arm64   4f47cb1236de70cf1c2c857d048aef6ad1fd0ce8c36f704b645596cb7e5039c5"
+  "tokenizer-darwin-arm64    795d55df8121b6649d8458464b188aa7dde785a374e29f59486eea5642483503"
+  "tokenizer-linux-amd64     27549fd5f5e16704575c7e2a78c9c49376f6b4df6350e692ea8f430034bdd46b"
+  "tokenizer-linux-arm64     30ebedc825be94f0b779f34ab1759c6b68750abd0343ce24a41053b719a3c630"
 )
 
 # Fetches one archive into a tag-keyed cache shared by every build directory, so

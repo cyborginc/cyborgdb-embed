@@ -1,15 +1,20 @@
 # Per-change gate: the library builds, its symbol surface is clean, and its
 # vectors still match sentence-transformers.
 #
-# ONNX Runtime and the tokenizer are committed as prebuilt archives, so nothing
-# here builds them. scripts/build_ort.sh and scripts/build_tokenizer.sh
-# regenerate them when a version is bumped.
+# ONNX Runtime and the tokenizer are published as prebuilt archives under their
+# own release tags, so nothing here builds them. scripts/build_ort.sh and
+# scripts/build_tokenizer.sh regenerate them when a version is bumped.
 name: ci
 
 on:
   push:
     branches: [main]
   pull_request:
+
+# Nothing here writes to the repository. Declared at the top level so a new job
+# starts read-only rather than inheriting whatever the default happens to be.
+permissions:
+  contents: read
 
 jobs:
   build:
@@ -49,6 +54,25 @@ jobs:
       - uses: actions/checkout@v4
       - run: sudo apt-get update && sudo apt-get install -y libcurl4-openssl-dev libssl-dev
 
+      # Audits the published archives rather than locally built ones, so what is
+      # checked is what a consumer actually downloads. Every platform is pulled,
+      # not just this runner's, because the export surface differs by object
+      # format and a Linux run cannot vouch for the Mach-O archive.
+      - name: fetch published archives
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p .artifacts/audit
+          for component in onnxruntime tokenizers; do
+            gh release download "$(python3 scripts/version.py "$component" --tag)" \
+              --dir .artifacts/audit --pattern 'lib*.a' --clobber
+          done
+          # Guards every check below: an unmatched glob would otherwise leave
+          # them inspecting nothing and passing.
+          found=$(find .artifacts/audit -name 'lib*.a' | wc -l)
+          [ "$found" -eq 6 ] || { echo "expected 6 archives, downloaded $found"; exit 1; }
+          ls -l .artifacts/audit
+
       # Rebuilds what the consuming project vendors, at its pins, so the audit
       # reflects a real link rather than a guess.
       - run: ./scripts/build_core_deps.sh
@@ -62,7 +86,7 @@ jobs:
         run: |
           mapfile -t deps < <(find .ort/core-deps/lib -name '*.a' | sort -u)
           python3 scripts/symbol_diff.py \
-            --a onnxruntime/prebuilt/linux-amd64/libonnxruntime.a \
+            --a .artifacts/audit/libonnxruntime-linux-amd64.a \
             --b "${deps[@]}" --label-a onnxruntime --label-b core-deps | tee /tmp/overlap.txt
           if grep -qE '^[a-z]+ +[0-9]+ +[1-9]' /tmp/overlap.txt; then
             echo "strong symbol collisions with a consuming project"; exit 1
@@ -74,21 +98,23 @@ jobs:
       - name: vendored archives export only their public API
         run: |
           check() {
-            local found
-            found=$(nm -g --defined-only "$1" 2>/dev/null \
-              | awk '$2 ~ /^[TDBR]$/ {print $3}' | sort -u)
-            echo "$1: $(echo "$found" | tr '\n' ' ')"
-            [ "$(echo "$found" | wc -l)" -le "$2" ] || { echo "leaks strong symbols"; exit 1; }
+            local found count
+            found=$(nm -g --defined-only "$1" | awk '$2 ~ /^[TDBR]$/ {print $3}' | sort -u)
+            count=$(printf '%s' "$found" | grep -c . || true)
+            echo "$1: $count strong [$(echo "$found" | tr '\n' ' ')]"
+            # A zero is as wrong as an overrun: it means nothing was read.
+            if [ "$count" -lt 1 ] || [ "$count" -gt "$2" ]; then
+              echo "expected 1..$2 strong symbols, found $count"; exit 1
+            fi
           }
-          for a in onnxruntime/prebuilt/*/libonnxruntime.a; do check "$a" 2; done
-          for a in tokenizer/prebuilt/*/libcyborgdb_tokenizer.a; do check "$a" 3; done
+          for a in .artifacts/audit/libonnxruntime-*.a; do check "$a" 2; done
+          for a in .artifacts/audit/libtokenizer-*.a; do check "$a" 3; done
 
       # Hand-written assembly without a .note.GNU-stack marker makes the linker
       # mark the stack executable, and consumers inherit it.
       - name: archives do not require an executable stack
         run: |
-          for a in onnxruntime/prebuilt/linux-*/libonnxruntime.a \
-                   tokenizer/prebuilt/linux-*/libcyborgdb_tokenizer.a; do
+          for a in .artifacts/audit/lib*-linux-*.a; do
             if readelf -lW "$a" 2>/dev/null | grep -q 'GNU_STACK.*RWE'; then
               echo "$a requires an executable stack"; exit 1
             fi

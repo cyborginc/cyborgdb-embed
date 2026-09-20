@@ -15,7 +15,7 @@ on:
       - "tokenizers-*"
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   build:
@@ -39,10 +39,6 @@ jobs:
       - if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y libcurl4-openssl-dev libssl-dev
 
-      # The tag names a version but does not select one: the pin in the build
-      # script and Cargo.toml decides what is fetched, so that a local build
-      # produces the same archive as a release. They must therefore agree, or a
-      # tag would publish something other than what it claims.
       # The tag names a version but does not select one: versions.json decides
       # what is fetched and built, so a local build produces the same archive as
       # a release. The tag must therefore agree with it.
@@ -101,6 +97,12 @@ jobs:
 
   publish:
     needs: build
+    # Gated on the release environment. The build runs unattended so its checks
+    # and digests are on screen before anyone approves; only making the archives
+    # public needs a decision.
+    environment: release
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
@@ -131,8 +133,3 @@ jobs:
           fail_on_unmatched_files: true
           body: |
             Prebuilt static archives for `${{ github.ref_name }}`.
-
-            Each exports only its public C API; vendored dependencies are
-            localised out so they cannot collide with a consuming project.
-            Record the digests below in `cmake/artifacts.cmake` — a download
-            that does not match them is discarded.
