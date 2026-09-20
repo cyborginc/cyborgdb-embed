@@ -3,9 +3,7 @@
 
 # CMake
 build/
-build-ort/
-build-cov/
-build-bench/
+build-*/
 cmake-build-*/
 CMakeUserPresets.json
 

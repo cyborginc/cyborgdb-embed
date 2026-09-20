@@ -42,14 +42,62 @@ set(CYBORGDB_EMBED_ARTIFACT_DIGESTS
   "tokenizer-linux-arm64     30ebedc825be94f0b779f34ab1759c6b68750abd0343ce24a41053b719a3c630"
 )
 
+option(CYBORGDB_EMBED_STRIP_ARTIFACTS
+       "Discard local symbols from the prebuilt archives before linking" ON)
+
+# Removes the ONNX Runtime archive's local symbols, which are two thirds of its
+# size and none of its interface. They belong to ONNX Runtime rather than to
+# whoever links it, so dropping them shrinks a consumer's binary by a third
+# without touching the symbols they debug their own code with.
+#
+# Only that archive. The tokenizer's references its own Rust personality routine
+# as a local symbol, so stripping leaves an archive that still links elsewhere
+# but fails on that one undefined symbol -- and strip reports success, so the
+# breakage would surface as a confusing link error rather than here.
+#
+# The verified download is left alone and the result written beside it, so the
+# file the digest describes stays on disk exactly as it arrived.
+function(cyborgdb_embed_strip_artifact name archive out_path)
+  set(${out_path} "${archive}" PARENT_SCOPE)
+  if(NOT CYBORGDB_EMBED_STRIP_ARTIFACTS OR NOT CMAKE_STRIP
+     OR NOT name STREQUAL "onnxruntime")
+    return()
+  endif()
+
+  string(REGEX REPLACE "\\.a$" "-local-stripped.a" stripped "${archive}")
+  set(${out_path} "${stripped}" PARENT_SCOPE)
+  if(EXISTS "${stripped}")
+    return()
+  endif()
+
+  # -x on Mach-O, --discard-all elsewhere: both keep every global the linker
+  # resolves against and drop the rest.
+  if(APPLE)
+    set(flag -x)
+  else()
+    set(flag --discard-all)
+  endif()
+
+  configure_file("${archive}" "${stripped}" COPYONLY)
+  execute_process(COMMAND "${CMAKE_STRIP}" ${flag} "${stripped}"
+                  RESULT_VARIABLE stripped_result ERROR_QUIET)
+  if(NOT stripped_result EQUAL 0)
+    # Nothing here is required; fall back to the archive as downloaded.
+    file(REMOVE "${stripped}")
+    set(${out_path} "${archive}" PARENT_SCOPE)
+  endif()
+endfunction()
+
 # Fetches one archive into a tag-keyed cache shared by every build directory, so
 # configuring twice or switching build types does not download again.
 function(cyborgdb_embed_fetch_artifact name platform tag out_path)
   set(local "${CMAKE_CURRENT_SOURCE_DIR}/.artifacts/${tag}/lib${name}-${platform}.a")
-  set(${out_path} "${local}" PARENT_SCOPE)
   if(EXISTS "${local}")
+    cyborgdb_embed_strip_artifact("${name}" "${local}" usable)
+    set(${out_path} "${usable}" PARENT_SCOPE)
     return()
   endif()
+  set(${out_path} "${local}" PARENT_SCOPE)
 
   set(digest "")
   foreach(entry IN LISTS CYBORGDB_EMBED_ARTIFACT_DIGESTS)
@@ -81,4 +129,7 @@ function(cyborgdb_embed_fetch_artifact name platform tag out_path)
   # Renamed only after the hash matched, so an interrupted fetch never looks
   # like a complete one.
   file(RENAME "${local}.partial" "${local}")
+
+  cyborgdb_embed_strip_artifact("${name}" "${local}" usable)
+  set(${out_path} "${usable}" PARENT_SCOPE)
 endfunction()

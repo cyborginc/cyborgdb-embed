@@ -48,6 +48,10 @@ jobs:
       - name: golden vectors
         run: ctest --test-dir build --output-on-failure
 
+      # Almost all of this is ONNX Runtime, so it moves when its build flags do.
+      - name: consumer footprint
+        run: ./scripts/check_size.sh build/size_probe
+
   symbols:
     runs-on: ubuntu-latest
     steps:

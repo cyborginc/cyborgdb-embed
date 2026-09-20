@@ -76,6 +76,11 @@ if(CYBORGDB_EMBED_BUILD_TESTS)
   add_executable(embed_corpus tests/parity/embed_corpus.cpp)
   target_link_libraries(embed_corpus PRIVATE cyborgdb::embed)
 
+  # Linked only to measure the footprint a consumer inherits, and to prove the
+  # public header stands alone. scripts/check_size.sh holds the budget.
+  add_executable(size_probe tests/size/minimal.cpp)
+  target_link_libraries(size_probe PRIVATE cyborgdb::embed)
+
   add_executable(bench tests/bench/bench.cpp)
   target_link_libraries(bench PRIVATE cyborgdb::embed)
   find_package(Threads REQUIRED)

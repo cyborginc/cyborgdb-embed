@@ -112,6 +112,8 @@ Set `CYBORGDB_EMBED_OFFLINE=1` to fail on a cache miss without attempting networ
 
 CPU execution is supported today. CoreML and CUDA are planned for future releases.
 
+Linking adds roughly 19 MB to a stripped binary on macOS and 24 MB on Linux, nearly all of it ONNX Runtime. Unstripped it is 33-37 MB, so strip release builds if size matters — `-Wl,-x` on macOS, `-s` on Linux. The library does not set those for you, because stripping a binary is the decision of whoever has to debug it.
+
 ## Development
 
 ```bash
