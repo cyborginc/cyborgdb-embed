@@ -1,0 +1,3 @@
+- Add support for model quantization levels
+- Add support for CUDA backend
+- Add support for CoreML backend

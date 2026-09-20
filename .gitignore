@@ -5,6 +5,7 @@
 build/
 build-ort/
 build-cov/
+build-bench/
 cmake-build-*/
 CMakeUserPresets.json
 
