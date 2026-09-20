@@ -55,9 +55,9 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y libcurl4-openssl-dev libssl-dev zlib1g-dev
 
       # Audits the published archives rather than locally built ones, so what is
-      # checked is what a consumer actually downloads. Every platform is pulled,
-      # not just this runner's, because the export surface differs by object
-      # format and a Linux run cannot vouch for the Mach-O archive.
+      # checked is what a consumer actually downloads. Only the ELF archives:
+      # nm reads one object format, and the Mach-O archives are checked on a
+      # macOS runner when they are built.
       - name: fetch published archives
         env:
           GH_TOKEN: ${{ github.token }}
@@ -65,12 +65,12 @@ jobs:
           mkdir -p .artifacts/audit
           for component in onnxruntime tokenizers; do
             gh release download "$(python3 scripts/version.py "$component" --tag)" \
-              --dir .artifacts/audit --pattern 'lib*.a' --clobber
+              --dir .artifacts/audit --pattern 'lib*-linux-*.a' --clobber
           done
           # Guards every check below: an unmatched glob would otherwise leave
           # them inspecting nothing and passing.
           found=$(find .artifacts/audit -name 'lib*.a' | wc -l)
-          [ "$found" -eq 6 ] || { echo "expected 6 archives, downloaded $found"; exit 1; }
+          [ "$found" -eq 4 ] || { echo "expected 4 archives, downloaded $found"; exit 1; }
           ls -l .artifacts/audit
 
       # Rebuilds what the consuming project vendors, at its pins, so the audit
@@ -107,8 +107,8 @@ jobs:
               echo "expected 1..$2 strong symbols, found $count"; exit 1
             fi
           }
-          for a in .artifacts/audit/libonnxruntime-*.a; do check "$a" 2; done
-          for a in .artifacts/audit/libtokenizer-*.a; do check "$a" 3; done
+          for a in .artifacts/audit/libonnxruntime-linux-*.a; do check "$a" 2; done
+          for a in .artifacts/audit/libtokenizer-linux-*.a; do check "$a" 3; done
 
       # Hand-written assembly without a .note.GNU-stack marker makes the linker
       # mark the stack executable, and consumers inherit it.
