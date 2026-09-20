@@ -59,10 +59,72 @@ def measure(args):
     return rows
 
 
+# Throughput spans fifty-fold across these models, so one shared axis would
+# flatten the largest into invisibility and a log axis would stop bar length
+# meaning anything. A panel per model keeps both readable and proportional.
+CHARTS = [
+    ("throughput_per_s", 1.0, "Throughput (sentences/s)", "higher is better", "throughput.png"),
+    ("p95_ms", 1.0, "p95 latency (ms)", "lower is better", "p95.png"),
+    ("peak_rss_bytes", 1e-6, "Peak resident memory (MB)", "lower is better", "peak-rss.png"),
+]
+ARMS = [("cyborgdb-embed", "#2b6cb0"), ("sentence-transformers", "#a0aec0")]
+
+
+def plot(rows, args, outdir):
+    try:
+        import matplotlib
+    except ImportError:
+        sys.exit("charts need matplotlib: "
+                 "pip install -r tests/bench/requirements.txt")
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    outdir.mkdir(parents=True, exist_ok=True)
+    written = []
+    for field, scale, label, sense, filename in CHARTS:
+        fig, axes = plt.subplots(1, len(args.models), figsize=(4 * len(args.models), 4.2))
+        axes = axes if len(args.models) > 1 else [axes]
+
+        for ax, model in zip(axes, args.models):
+            positions = range(len(args.threads))
+            for offset, (arm, colour) in enumerate(ARMS):
+                values = []
+                for threads in args.threads:
+                    r = next((x for x in rows if x["model"] == model
+                              and x["req_threads"] == threads and x["arm"] == arm), None)
+                    values.append(r[field] * scale if r else 0.0)
+                bars = ax.bar([p + offset * 0.38 for p in positions], values,
+                              width=0.38, label=arm, color=colour)
+                ax.bar_label(bars, fmt="%.0f", fontsize=8, padding=2)
+
+            ax.set_title(model.split("/")[-1], fontsize=10)
+            ax.set_xticks([p + 0.19 for p in positions])
+            ax.set_xticklabels([f"{n} thread" + ("s" if n != 1 else "") for n in args.threads])
+            ax.spines[["top", "right"]].set_visible(False)
+            ax.margins(y=0.18)
+        axes[0].set_ylabel(label)
+
+        handles, labels = axes[0].get_legend_handles_labels()
+        fig.legend(handles, labels, loc="lower center", ncol=2, frameon=False)
+        fig.suptitle(f"{label} \u2014 {sense}", fontsize=12)
+        fig.text(0.5, 0.11, provenance(args), ha="center", fontsize=8, color="#4a5568")
+        fig.tight_layout(rect=(0, 0.14, 1, 0.96))
+
+        path = outdir / filename
+        fig.savefig(path, dpi=144)
+        plt.close(fig)
+        written.append(path)
+    return written
+
+
+def provenance(args):
+    return (f"Measured on {cpu_name()}, {platform.system()}, CPU only. "
+            f"Batch {args.batch}, {args.seconds:g}s per configuration, "
+            f"{args.corpus.name}.")
+
+
 def tables(rows, args):
-    lines = [f"Measured on {cpu_name()}, {platform.system()}, CPU only. "
-             f"Batch {args.batch}, {args.seconds:g}s per configuration, "
-             f"{args.corpus.name}.", ""]
+    lines = [provenance(args), ""]
     width = max(len(m.split("/")[-1]) + 2 for m in args.models)
     for threads in args.threads:
         lines += [f"### {threads} thread" + ("s" if threads != 1 else ""), "",
@@ -100,21 +162,30 @@ def main():
     p.add_argument("--json", type=pathlib.Path, help="also write the raw measurements here")
     p.add_argument("--from-json", type=pathlib.Path,
                    help="re-render tables from a previous --json run, measuring nothing")
+    p.add_argument("--plot", type=pathlib.Path, metavar="DIR",
+                   help="also write throughput, p95 and memory charts here (needs matplotlib)")
     args = p.parse_args()
 
     if args.from_json:
         rows = json.loads(args.from_json.read_text())
         print(tables(rows, args))
+        if args.plot:
+            for path in plot(rows, args, args.plot):
+                print(f"wrote {path}", file=sys.stderr)
         return 0
 
     if not args.bench.exists():
-        sys.exit(f"no benchmark binary at {args.bench}; build it first")
+        sys.exit(f"no benchmark binary at {args.bench}.\n"
+                 f"Build it with:  cmake -S . -B build && cmake --build build --target bench")
 
     rows = measure(args)
     if args.json:
         args.json.write_text(json.dumps(rows, indent=2) + "\n")
         print(f"raw measurements in {args.json}", file=sys.stderr)
     print(tables(rows, args))
+    if args.plot:
+        for path in plot(rows, args, args.plot):
+            print(f"wrote {path}", file=sys.stderr)
     return 0
 
 

@@ -81,27 +81,13 @@ Model configuration and pinned upstream revisions are defined in `registry.yaml`
 
 Apple M4 Max, CPU only on both sides. Batch size 32 over the same 531-sentence corpus, vectors normalized, tokenization counted in the timing. The reference arm is `sentence-transformers` 6.1.0 on torch 2.14.0.
 
-### 1 thread
+![Throughput](docs/bench/throughput.png)
 
-| Model               | Library               | Throughput |    p95 | Peak RSS |
-| ------------------- | --------------------- | ---------: | -----: | -------: |
-| `bge-small-en-v1.5` | cyborgdb-embed        |      413/s |  470ms |   519 MB |
-|                     | sentence-transformers |      167/s | 2251ms |   993 MB |
-| `bge-base-en-v1.5`  | cyborgdb-embed        |      174/s |  994ms |   893 MB |
-|                     | sentence-transformers |       96/s | 3388ms |  1646 MB |
-| `bge-large-en-v1.5` | cyborgdb-embed        |       51/s | 1344ms |  2236 MB |
-|                     | sentence-transformers |       24/s | 9962ms |  2790 MB |
+![p95 latency](docs/bench/p95.png)
 
-### 12 threads
+![Peak resident memory](docs/bench/peak-rss.png)
 
-| Model               | Library               | Throughput |    p95 | Peak RSS |
-| ------------------- | --------------------- | ---------: | -----: | -------: |
-| `bge-small-en-v1.5` | cyborgdb-embed        |     1275/s |  119ms |   538 MB |
-|                     | sentence-transformers |      594/s |  507ms |  1012 MB |
-| `bge-base-en-v1.5`  | cyborgdb-embed        |      513/s |  326ms |   893 MB |
-|                     | sentence-transformers |      247/s | 1190ms |  1648 MB |
-| `bge-large-en-v1.5` | cyborgdb-embed        |      163/s | 1063ms |  2237 MB |
-|                     | sentence-transformers |       66/s | 3943ms |  2790 MB |
+Regenerate with `python tests/bench/matrix.py --reference-python .venv-parity/bin/python --plot docs/bench` once `bench` is built; the reference arm needs `tests/parity/requirements.txt` and the charts need `tests/bench/requirements.txt`.
 
 ## Model downloads and offline use
 

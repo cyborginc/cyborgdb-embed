@@ -1,0 +1,7 @@
+# Benchmark harness only. Building and using the library needs none of this.
+#
+# Charts need matplotlib. Comparing against sentence-transformers additionally
+# needs tests/parity/requirements.txt, which pulls torch; install that in its
+# own environment and point --reference-python at it to keep torch out of the
+# way of everything else.
+matplotlib>=3.7
