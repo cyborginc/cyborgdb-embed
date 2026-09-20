@@ -92,7 +92,7 @@ jobs:
             ~/.cache/cyborgdb-embed
           key: weights-${{ matrix.model }}-${{ hashFiles('registry.yaml') }}
 
-      - run: sudo apt-get update && sudo apt-get install -y libcurl4-openssl-dev libssl-dev
+      - run: ./scripts/ci_apt.sh libcurl4-openssl-dev libssl-dev zlib1g-dev
       - run: pip install -r tests/parity/requirements.txt
       - run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build -j
 

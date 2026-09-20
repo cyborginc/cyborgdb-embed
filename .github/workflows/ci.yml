@@ -33,7 +33,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y libcurl4-openssl-dev libssl-dev zlib1g-dev
+        run: ./scripts/ci_apt.sh libcurl4-openssl-dev libssl-dev zlib1g-dev
 
       # Model files are downloaded on first use and keyed by pinned revision, so
       # a re-pin invalidates rather than serving stale weights.
@@ -52,7 +52,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: sudo apt-get update && sudo apt-get install -y libcurl4-openssl-dev libssl-dev zlib1g-dev
+      - run: ./scripts/ci_apt.sh libcurl4-openssl-dev libssl-dev zlib1g-dev
 
       # Audits the published archives rather than locally built ones, so what is
       # checked is what a consumer actually downloads. Only the ELF archives:
@@ -125,7 +125,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: sudo apt-get update && sudo apt-get install -y libcurl4-openssl-dev libssl-dev zlib1g-dev lcov
+      - run: ./scripts/ci_apt.sh libcurl4-openssl-dev libssl-dev zlib1g-dev lcov
 
       # The golden test needs a model, and without it the inference path reads
       # as uncovered. Cached by pinned revision, so a re-pin refetches.
