@@ -75,3 +75,12 @@ endif()
 
 find_package(Threads REQUIRED)
 target_link_libraries(cyborgdb_onnxruntime INTERFACE Threads::Threads)
+
+# The archive leaves zlib, libm and the dynamic loader undefined for whoever
+# links it. macOS resolves all three out of libSystem without being asked, so
+# they only have to be named elsewhere.
+find_package(ZLIB REQUIRED)
+target_link_libraries(cyborgdb_onnxruntime INTERFACE ZLIB::ZLIB)
+if(NOT APPLE)
+  target_link_libraries(cyborgdb_onnxruntime INTERFACE dl m)
+endif()
