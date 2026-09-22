@@ -6,6 +6,9 @@
 #
 #   ort-1.30.0-1          ONNX Runtime 1.30.0, first build
 #   tokenizers-0.23.2-1   tokenizers 0.23.2, first build
+#
+# A manual run builds candidates of both components and verifies them without
+# publishing anything. parity.yml takes that run's id to score the candidates.
 name: release-artifacts
 
 on:
@@ -13,12 +16,119 @@ on:
     tags:
       - "ort-*"
       - "tokenizers-*"
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      components: ${{ steps.pick.outputs.components }}
+    steps:
+      - id: pick
+        run: |
+          case "${{ github.ref_type }}/${{ github.ref_name }}" in
+            tag/ort-*)        components='["onnxruntime"]' ;;
+            tag/tokenizers-*) components='["tokenizers"]' ;;
+            *)                components='["onnxruntime", "tokenizers"]' ;;
+          esac
+          echo "components=$components" >> "$GITHUB_OUTPUT"
+
   build:
+    needs: plan
+    strategy:
+      fail-fast: false
+      matrix:
+        component: ${{ fromJson(needs.plan.outputs.components) }}
+        platform: [linux-amd64, linux-arm64, darwin-arm64]
+        include:
+          - platform: linux-amd64
+            runner: ubuntu-latest
+          - platform: linux-arm64
+            runner: ubuntu-24.04-arm
+          - platform: darwin-arm64
+            runner: macos-latest
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # The Linux builds run in the manylinux image, which carries its own Rust.
+      - if: matrix.component == 'tokenizers' && runner.os == 'macOS'
+        uses: dtolnay/rust-toolchain@stable
+
+      # The tag names a version but does not select one: versions.json decides
+      # what is fetched and built, so a local build produces the same archive as
+      # a release. The tag must therefore agree with it.
+      - name: tag matches versions.json
+        if: github.ref_type == 'tag'
+        run: |
+          tag="${{ github.ref_name }}"
+          expected=$(./scripts/version.py ${{ matrix.component }} --tag)
+          echo "tag $tag, versions.json $expected"
+          [ "$tag" = "$expected" ] || {
+            echo "tag disagrees with versions.json; bump the build number there or retag"
+            exit 1; }
+
+      - name: build
+        env:
+          ORT_PLATFORM: ${{ matrix.platform }}
+          TOKENIZER_PLATFORM: ${{ matrix.platform }}
+        run: |
+          platform=${{ matrix.platform }}
+          if [ "${{ matrix.component }}" = onnxruntime ]; then
+            build=(./scripts/build_ort.sh all)
+            built=onnxruntime/prebuilt/$platform/libonnxruntime.a
+            name=libonnxruntime-$platform.a
+          else
+            build=(./scripts/build_tokenizer.sh all)
+            built=tokenizer/prebuilt/$platform/libcyborgdb_tokenizer.a
+            name=libtokenizer-$platform.a
+          fi
+          [ "$RUNNER_OS" = Linux ] && build=(./scripts/in_manylinux.sh "${build[@]}")
+          "${build[@]}"
+          mv "$built" "$name"
+
+      # The archive must export its public entry points and nothing more. Weak
+      # symbols are COMDAT instantiations that deduplicate safely; the strong
+      # ones are what would collide in a consumer's link.
+      - name: strong exports only
+        run: |
+          archive=$(ls lib*-${{ matrix.platform }}.a)
+          found=$(nm -g --defined-only "$archive" 2>/dev/null \
+            | awk '$2 ~ /^[TDBR]$/ {print $3}' | sed 's/^_//' | sort -u)
+          echo "$archive: $(echo "$found" | tr '\n' ' ')"
+          limit=3; [ "${{ matrix.component }}" = onnxruntime ] && limit=2
+          [ "$(echo "$found" | wc -l)" -le "$limit" ] || { echo "leaks strong symbols"; exit 1; }
+
+      - if: runner.os == 'Linux'
+        name: no executable stack
+        run: |
+          archive=$(ls lib*-${{ matrix.platform }}.a)
+          readelf -lW "$archive" 2>/dev/null | grep -q 'GNU_STACK.*RWE' \
+            && { echo "$archive requires an executable stack"; exit 1; }
+          echo ok
+
+      - if: runner.os == 'macOS'
+        name: no newer macOS than the deployment target
+        run: ./scripts/check_minos.sh lib*-${{ matrix.platform }}.a
+
+      - run: shasum -a 256 lib*-${{ matrix.platform }}.a | tee digest-${{ matrix.platform }}.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: archive-${{ matrix.component }}-${{ matrix.platform }}
+          path: |
+            lib*-${{ matrix.platform }}.a
+            digest-${{ matrix.platform }}.txt
+
+  # Links the candidates the way a consumer would and runs the golden vectors,
+  # before anything is tagged. Linux links inside the manylinux image, since that
+  # is where a wheel's link happens and where a too-new glibc symbol fails.
+  verify:
+    needs: build
+    if: github.event_name == 'workflow_dispatch'
     strategy:
       fail-fast: false
       matrix:
@@ -32,71 +142,35 @@ jobs:
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
-
-      - if: startsWith(github.ref_name, 'tokenizers-')
-        uses: dtolnay/rust-toolchain@stable
-
-      - if: runner.os == 'Linux'
-        run: ./scripts/ci_apt.sh libcurl4-openssl-dev libssl-dev zlib1g-dev
-
-      # The tag names a version but does not select one: versions.json decides
-      # what is fetched and built, so a local build produces the same archive as
-      # a release. The tag must therefore agree with it.
-      - name: tag matches versions.json
-        run: |
-          tag="${{ github.ref_name }}"
-          case "$tag" in
-            ort-*) expected=$(./scripts/version.py onnxruntime --tag) ;;
-            *)     expected=$(./scripts/version.py tokenizers --tag) ;;
-          esac
-          echo "tag $tag, versions.json $expected"
-          [ "$tag" = "$expected" ] || {
-            echo "tag disagrees with versions.json; bump the build number there or retag"
-            exit 1; }
-
-      - name: build
-        run: |
-          if [[ "${{ github.ref_name }}" == ort-* ]]; then
-            ORT_PLATFORM=${{ matrix.platform }} ./scripts/build_ort.sh all
-            mv onnxruntime/prebuilt/${{ matrix.platform }}/libonnxruntime.a \
-               libonnxruntime-${{ matrix.platform }}.a
-          else
-            TOKENIZER_PLATFORM=${{ matrix.platform }} ./scripts/build_tokenizer.sh all
-            mv tokenizer/prebuilt/${{ matrix.platform }}/libcyborgdb_tokenizer.a \
-               libtokenizer-${{ matrix.platform }}.a
-          fi
-
-      # The archive must export its public entry points and nothing more. Weak
-      # symbols are COMDAT instantiations that deduplicate safely; the strong
-      # ones are what would collide in a consumer's link.
-      - name: strong exports only
-        run: |
-          archive=$(ls lib*-${{ matrix.platform }}.a)
-          found=$(nm -g --defined-only "$archive" 2>/dev/null \
-            | awk '$2 ~ /^[TDBR]$/ {print $3}' | sed 's/^_//' | sort -u)
-          echo "$archive: $(echo "$found" | tr '\n' ' ')"
-          limit=3; [[ "${{ github.ref_name }}" == ort-* ]] && limit=2
-          [ "$(echo "$found" | wc -l)" -le "$limit" ] || { echo "leaks strong symbols"; exit 1; }
-
-      - if: runner.os == 'Linux'
-        name: no executable stack
-        run: |
-          archive=$(ls lib*-${{ matrix.platform }}.a)
-          readelf -lW "$archive" 2>/dev/null | grep -q 'GNU_STACK.*RWE' \
-            && { echo "$archive requires an executable stack"; exit 1; }
-          echo ok
-
-      - run: shasum -a 256 lib*-${{ matrix.platform }}.a | tee digest-${{ matrix.platform }}.txt
-
-      - uses: actions/upload-artifact@v4
+      - uses: actions/download-artifact@v4
         with:
-          name: archive-${{ matrix.platform }}
-          path: |
-            lib*-${{ matrix.platform }}.a
-            digest-${{ matrix.platform }}.txt
+          pattern: archive-*-${{ matrix.platform }}
+          merge-multiple: true
+          path: candidate
+      - run: ./scripts/seed_candidates.sh candidate
+
+      - name: golden vectors, footprint and glibc symbols
+        if: runner.os == 'Linux'
+        run: |
+          ./scripts/in_manylinux.sh bash -c '
+            set -e
+            cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+            cmake --build build -j
+            ctest --test-dir build --output-on-failure
+            ./scripts/check_size.sh build/size_probe
+            ./scripts/check_glibc.sh build/size_probe'
+
+      - name: golden vectors and footprint
+        if: runner.os == 'macOS'
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build -j
+          ctest --test-dir build --output-on-failure
+          ./scripts/check_size.sh build/size_probe
 
   publish:
     needs: build
+    if: github.ref_type == 'tag'
     # Gated on the release environment. The build runs unattended so its checks
     # and digests are on screen before anyone approves; only making the archives
     # public needs a decision.

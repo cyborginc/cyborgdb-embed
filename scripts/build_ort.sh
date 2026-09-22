@@ -29,6 +29,10 @@ PHASE="${1:-all}"
 
 if [[ "$(uname)" == "Darwin" ]]; then
   JOBS="$(sysctl -n hw.ncpu)"
+  # CMake reads this from the environment. Left unset, every object claims the
+  # build host's macOS version, and a wheel targeting an older one refuses them.
+  MACOSX_DEPLOYMENT_TARGET="$(python3 "$ROOT/scripts/version.py" macos)"
+  export MACOSX_DEPLOYMENT_TARGET
 else
   JOBS="$(nproc)"
 fi
@@ -56,6 +60,11 @@ build() {
     "CMAKE_CXX_FLAGS_RELEASE=-Os -DNDEBUG"
     "CMAKE_C_FLAGS_RELEASE=-Os -DNDEBUG"
   )
+
+  # The environment only seeds a fresh cache; this also holds for a reused one.
+  if [[ -n "${MACOSX_DEPLOYMENT_TARGET:-}" ]]; then
+    defines+=("CMAKE_OSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET")
+  fi
 
   # Point ORT at an already-built dependency tree instead of its own pin.
   if [[ -n "${ABSL_SOURCE_DIR:-}" ]]; then
@@ -113,8 +122,8 @@ build() {
 # one), and extracting flattens them onto each other, silently dropping code that
 # only fails to link much later.
 #
-# Archives fully contained in another are dropped first: a whole-archive partial
-# link rejects the duplicate symbols they would contribute.
+# Archives fully contained in another are dropped first, so the partial link
+# never sees two definitions of one symbol.
 merge() {
   local out="$INSTALL/lib/libonnxruntime_merged.a"
   mkdir -p "$INSTALL/lib" "$INSTALL/include"
@@ -155,25 +164,32 @@ merge() {
 # Runtime's vendored abseil, re2 and flatbuffers cannot bind against a consumer's
 # own copies. A partial link resolves ORT's internal references first, which is
 # what makes hiding the rest safe.
+#
+# The C API is the link's only root: members nothing reaches from it are left
+# out. A kernel reachable only through code that was left out fails at inference
+# rather than at link, so the golden and parity runs gate this, not the smoke link.
 isolate() {
   local merged="$INSTALL/lib/libonnxruntime_merged.a"
   local out="$INSTALL/lib/libonnxruntime_isolated.a"
   local keep="$INSTALL/lib/exported_symbols.txt"
   local object="$BUILD/ort_isolated.o"
+  local roots=() symbol
 
   if [[ "$(uname)" == "Darwin" ]]; then
     # Mach-O symbol names carry a leading underscore.
     printf '_OrtGetApiBase\n_OrtSessionOptionsAppendExecutionProvider_CPU\n' > "$keep"
+    while read -r symbol; do roots+=(-u "$symbol"); done < "$keep"
     ld -r -arch "$(uname -m)" \
-      -platform_version macos "$(sw_vers -productVersion | cut -d. -f1).0" "$(xcrun --show-sdk-version)" \
-      -all_load -exported_symbols_list "$keep" \
+      -platform_version macos "$MACOSX_DEPLOYMENT_TARGET" "$(xcrun --show-sdk-version)" \
+      "${roots[@]}" -exported_symbols_list "$keep" \
       -o "$object" "$merged" 2>&1 | grep -v "not 4-byte aligned" || true
   else
     printf 'OrtGetApiBase\nOrtSessionOptionsAppendExecutionProvider_CPU\n' > "$keep"
+    while read -r symbol; do roots+=(-u "$symbol"); done < "$keep"
     # Some hand-written assembly carries no .note.GNU-stack marker, so the
     # linker conservatively marks the stack executable and every consumer
     # inherits it. Assert non-executable here rather than leaving it to them.
-    ld -r -z noexecstack --whole-archive "$merged" --no-whole-archive -o "$object"
+    ld -r -z noexecstack "${roots[@]}" -o "$object" "$merged"
 
     # Localize strong symbols only, never weak ones.
     #
@@ -196,8 +212,9 @@ isolate() {
   ls -lh "$out"
 }
 
-# A successful link against the merged archive is the check that the archive set
-# is complete; undefined symbols here mean merge() missed something.
+# A successful link against the isolated archive is the check that the archive
+# set is complete and the partial link kept what the C API needs; undefined
+# symbols here mean merge() or isolate() dropped something.
 verify() {
   local tmp; tmp="$(mktemp -d)"
   cat > "$tmp/smoke.cpp" <<'EOF'
@@ -234,7 +251,7 @@ EOF
   # program that only asks for the API version links even when those are broken.
 
   c++ -std=c++17 -I"$INSTALL/include" "$tmp/smoke.cpp" \
-    "$INSTALL/lib/libonnxruntime_merged.a" "${libs[@]}" -o "$tmp/smoke"
+    "$INSTALL/lib/libonnxruntime_isolated.a" "${libs[@]}" -o "$tmp/smoke"
   "$tmp/smoke"
   rm -rf "$tmp"
 }

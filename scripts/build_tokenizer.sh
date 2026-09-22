@@ -22,6 +22,13 @@ PHASE="${1:-all}"
 
 EXPORTS=(cyborgdb_tokenizer_new cyborgdb_tokenizer_free cyborgdb_tokenizer_encode)
 
+# rustc and the C compiler behind the onig crate both read this. Left unset,
+# objects claim the build host's macOS version, and an older wheel refuses them.
+if [[ "$(uname)" == "Darwin" ]]; then
+  MACOSX_DEPLOYMENT_TARGET="$(python3 "$ROOT/scripts/version.py" macos)"
+  export MACOSX_DEPLOYMENT_TARGET
+fi
+
 # Cargo needs the version in Cargo.toml, but versions.json is what a person
 # edits, so the manifest is brought into line here rather than being a second
 # place to remember.
@@ -78,7 +85,7 @@ isolate() {
   if [[ "$(uname)" == "Darwin" ]]; then
     printf '_%s\n' "${EXPORTS[@]}" > "$keep"
     ld -r -arch "$(uname -m)" \
-      -platform_version macos "$(sw_vers -productVersion | cut -d. -f1).0" "$(xcrun --show-sdk-version)" \
+      -platform_version macos "$MACOSX_DEPLOYMENT_TARGET" "$(xcrun --show-sdk-version)" \
       -exported_symbols_list "$keep" -o "$object" "$staging"/*.o 2>&1 \
       | grep -viE "was built for newer" || true
   else

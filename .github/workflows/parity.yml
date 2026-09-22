@@ -13,6 +13,9 @@ on:
       models:
         description: Space-separated registry ids; empty runs all
         required: false
+      candidate:
+        description: Id of a manual release-artifacts run whose unpublished archives to score; empty uses the pinned release
+        required: false
 
 permissions:
   contents: read
@@ -91,6 +94,17 @@ jobs:
             ~/.cache/huggingface
             ~/.cache/cyborgdb-embed
           key: weights-${{ matrix.model }}-${{ hashFiles('registry.yaml') }}
+
+      - if: inputs.candidate != ''
+        uses: actions/download-artifact@v4
+        with:
+          pattern: archive-*-linux-amd64
+          merge-multiple: true
+          path: candidate
+          run-id: ${{ inputs.candidate }}
+          github-token: ${{ github.token }}
+      - if: inputs.candidate != ''
+        run: ./scripts/seed_candidates.sh candidate
 
       - run: ./scripts/ci_apt.sh libcurl4-openssl-dev libssl-dev zlib1g-dev
       - run: pip install -r tests/parity/requirements.txt

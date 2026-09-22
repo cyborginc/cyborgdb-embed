@@ -45,12 +45,34 @@ jobs:
       - run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
       - run: cmake --build build -j
 
+      - if: runner.os == 'macOS'
+        name: archives need no newer macOS than the deployment target
+        run: ./scripts/check_minos.sh .artifacts/*/lib*-darwin-arm64.a
+
       - name: golden vectors
         run: ctest --test-dir build --output-on-failure
 
       # Almost all of this is ONNX Runtime, so it moves when its build flags do.
       - name: consumer footprint
         run: ./scripts/check_size.sh build/size_probe
+
+  # A wheel links in a manylinux_2_28 image, against glibc 2.28 and that system's
+  # libstdc++. Linking the published archives there is what proves a wheel can.
+  manylinux:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: links under manylinux_2_28
+        run: |
+          ./scripts/in_manylinux.sh bash -c '
+            set -e
+            cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+            cmake --build build --target size_probe -j
+            ./scripts/check_glibc.sh build/size_probe'
 
   symbols:
     runs-on: ubuntu-latest

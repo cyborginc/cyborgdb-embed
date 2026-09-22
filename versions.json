@@ -5,7 +5,10 @@
     "archive without the upstream version moving, which is how the release tags",
     "ort-1.30.0-1 and tokenizers-0.23.2-1 are formed.",
     "",
-    "This is the only place either version is written. The build scripts, the",
+    "macos_deployment_target is the oldest macOS the archives may require. It",
+    "must not exceed the target of the wheels that link them.",
+    "",
+    "This is the only place any of these is written. The build scripts, the",
     "CMake fetch, and the release workflow all read it."
   ],
   "onnxruntime": {
@@ -15,5 +18,6 @@
   "tokenizers": {
     "version": "0.23.2",
     "build": 1
-  }
+  },
+  "macos_deployment_target": "14.0"
 }
