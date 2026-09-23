@@ -13,11 +13,11 @@
   ],
   "onnxruntime": {
     "version": "1.30.0",
-    "build": 1
+    "build": 2
   },
   "tokenizers": {
     "version": "0.23.2",
-    "build": 1
+    "build": 2
   },
   "macos_deployment_target": "14.0"
 }
