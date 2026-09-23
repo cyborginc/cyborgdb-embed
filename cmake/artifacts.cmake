@@ -34,12 +34,12 @@ set(CYBORGDB_EMBED_ARTIFACT_REPO "https://github.com/cyborginc/cyborgdb-embed"
 # sha256 of each published archive. A download that does not match is discarded:
 # these are binaries nobody can review, so the pin is what makes them trustable.
 set(CYBORGDB_EMBED_ARTIFACT_DIGESTS
-  "onnxruntime-darwin-arm64  e81a9c366519ef267cc22bc85864a94592624af8d547d019f5e48b4a519c1b50"
-  "onnxruntime-linux-amd64   9d057d119b61300d630059007e23ce49602e4f1a97d5d0bd0f9dad968cd8fdd0"
-  "onnxruntime-linux-arm64   4f47cb1236de70cf1c2c857d048aef6ad1fd0ce8c36f704b645596cb7e5039c5"
-  "tokenizer-darwin-arm64    795d55df8121b6649d8458464b188aa7dde785a374e29f59486eea5642483503"
-  "tokenizer-linux-amd64     27549fd5f5e16704575c7e2a78c9c49376f6b4df6350e692ea8f430034bdd46b"
-  "tokenizer-linux-arm64     30ebedc825be94f0b779f34ab1759c6b68750abd0343ce24a41053b719a3c630"
+  "onnxruntime-darwin-arm64  8298f53dd9044ad1f1e15a87ae2e42cc0a4125de1fec00e25ed1b90cb159bfe2"
+  "onnxruntime-linux-amd64   2c8794b2ab577f6381cf013882417fc5492a13f937d28ae5c771a0c24111b084"
+  "onnxruntime-linux-arm64   c7f9cf02741add1b3b29dbc4fce5748ae149b1c48f066e79b08affb82bf75409"
+  "tokenizer-darwin-arm64    26abd222508aeb07ec2a43efc72bf744980542e45adcb99b887b05600d45819c"
+  "tokenizer-linux-amd64     2ba671f9785ffa100cb25494f20d055ed0dd3bb7a84d7030d81284dba52b8e28"
+  "tokenizer-linux-arm64     b3aacfcf9a1194504fb29b51bc5f7d4e2503e32ad40edecb2db51f6ba23924ad"
 )
 
 option(CYBORGDB_EMBED_STRIP_ARTIFACTS
