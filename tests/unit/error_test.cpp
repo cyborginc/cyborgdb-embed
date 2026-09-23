@@ -65,7 +65,40 @@ void registry_lookups() {
     expect(models[i].max_seq_length > 0, "every model has a sequence limit");
     const embed::ModelInfo& found = embed::info(models[i].id);
     expect(found.id == models[i].id, "info() round-trips every id");
+
+    embed::ModelId by_name{};
+    expect(embed::find_model(models[i].name, by_name).ok() && by_name == models[i].id,
+           "find_model() resolves every upstream name");
   }
+}
+
+void name_lookups() {
+  embed::ModelId id{};
+  expect(embed::find_model("all-MiniLM-L6-v2", id).ok() &&
+             id == embed::ModelId::AllMiniLmL6V2,
+         "a bare name resolves under sentence-transformers/");
+  expect(embed::find_model("all-Mpnet-base-v2", id).ok() &&
+             id == embed::ModelId::AllMpnetBaseV2,
+         "a bare name matches regardless of case");
+  expect(embed::find_model("baai/BGE-small-en-v1.5", id).ok() &&
+             id == embed::ModelId::BgeSmallEnV15,
+         "a full name matches regardless of case");
+
+  const embed::Status unknown = embed::find_model("not-a-model", id);
+  expect_code(unknown, embed::StatusCode::InvalidArgument, "an unknown name");
+  expect(unknown.message.find("sentence-transformers/all-MiniLM-L6-v2") != std::string::npos,
+         "an unknown name lists the supported models");
+  expect(unknown.message.find("hosted") == std::string::npos,
+         "an unknown name is not called hosted");
+
+  for (const char* hosted : {"text-embedding-ada-002", "text-embedding-3-small",
+                             "text-embedding-3-large", "openai/text-embedding-3-small"}) {
+    const embed::Status status = embed::find_model(hosted, id);
+    expect_code(status, embed::StatusCode::InvalidArgument, hosted);
+    expect(status.message.find("hosted API model, not supported") != std::string::npos,
+           "a hosted model gets its own message");
+  }
+  expect_code(embed::find_model("", id), embed::StatusCode::InvalidArgument, "an empty name");
 }
 
 void status_helpers() {
@@ -112,15 +145,10 @@ void unopened_embedder() {
 void invalid_options() {
   embed::Embedder model;
 
-  embed::Options no_threads;
-  no_threads.threads = 0;
-  expect_code(embed::open(embed::ModelId::BgeSmallEnV15, no_threads, model),
-              embed::StatusCode::InvalidArgument, "threads = 0");
-
-  embed::Options negative;
-  negative.threads = -4;
-  expect_code(embed::open(embed::ModelId::BgeSmallEnV15, negative, model),
-              embed::StatusCode::InvalidArgument, "negative threads");
+  expect_code(embed::configure_runtime({0}), embed::StatusCode::InvalidArgument,
+              "threads = 0");
+  expect_code(embed::configure_runtime({-4}), embed::StatusCode::InvalidArgument,
+              "negative threads");
 
   embed::Options quantised;
   quantised.precision = embed::Precision::Int8;
@@ -325,6 +353,7 @@ int main() {
   fs::create_directories(scratch);
 
   registry_lookups();
+  name_lookups();
   status_helpers();
   capabilities();
   unopened_embedder();

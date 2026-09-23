@@ -14,7 +14,7 @@ Status SessionStore::configure(const CacheConfig& config) {
 }
 
 Status SessionStore::acquire(const RegistryEntry& entry, Provider provider,
-                             Precision precision, int threads,
+                             Precision precision,
                              std::shared_ptr<Session>& out) {
   const Key key{entry.info.id, provider, precision};
   std::shared_future<std::shared_ptr<Session>> pending;
@@ -55,7 +55,7 @@ Status SessionStore::acquire(const RegistryEntry& entry, Provider provider,
   if (promise) {
     std::shared_ptr<Session> session;
     const Status status =
-        load_session(entry, provider, precision, threads, config, session);
+        load_session(entry, provider, precision, config, session);
     promise->set_value(status.ok() ? session : nullptr);
 
     std::lock_guard<std::mutex> guard(mutex_);

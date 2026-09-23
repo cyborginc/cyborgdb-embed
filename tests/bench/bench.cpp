@@ -31,6 +31,8 @@ using Clock = std::chrono::steady_clock;
 namespace {
 
 struct Config {
+  // Comma-separated. Callers take the models in turn, so two models and a
+  // concurrency of two measure them sharing the machine.
   std::string model = "BAAI/bge-small-en-v1.5";
   std::string corpus = "tests/data/corpus.bin";
   int concurrency = 1;
@@ -95,33 +97,36 @@ int main(int argc, char** argv) {
     return 2;
   }
 
-  std::size_t count = 0;
-  const embed::ModelInfo* all = embed::supported_models(count);
-  const embed::ModelInfo* info = nullptr;
-  for (std::size_t i = 0; i < count; ++i) {
-    if (all[i].name == config.model) info = &all[i];
-  }
-  if (info == nullptr) {
-    std::fprintf(stderr, "%s is not in the registry\n", config.model.c_str());
+  if (auto status = embed::configure_runtime({config.threads}); !status) {
+    std::fprintf(stderr, "configure_runtime: %s\n", status.message.c_str());
     return 2;
   }
 
-  embed::Options options;
-  options.threads = config.threads;
-  embed::Embedder model;
-  if (auto status = embed::open(info->id, options, model); !status) {
-    std::fprintf(stderr, "open: %s\n", status.message.c_str());
-    return 1;
+  std::vector<embed::Embedder> models;
+  for (std::size_t start = 0; start <= config.model.size();) {
+    const std::size_t end = std::min(config.model.find(',', start), config.model.size());
+    const std::string name = config.model.substr(start, end - start);
+    start = end + 1;
+
+    embed::ModelId id{};
+    if (auto status = embed::find_model(name, id); !status) {
+      std::fprintf(stderr, "%s\n", status.message.c_str());
+      return 2;
+    }
+    embed::Embedder& model = models.emplace_back();
+    if (auto status = embed::open(id, {}, model); !status) {
+      std::fprintf(stderr, "open: %s\n", status.message.c_str());
+      return 1;
+    }
   }
 
-  const std::size_t dim = model.dimension();
   const std::size_t rss_after_load = peak_rss_bytes();
 
   // One warm pass: the first call pays for graph warmup and arena growth, and
   // charging that to the measurement would misreport steady state.
-  {
+  for (const embed::Embedder& model : models) {
     std::vector<std::string_view> warm(texts.begin(), texts.begin() + config.batch);
-    std::vector<float> out(warm.size() * dim);
+    std::vector<float> out(warm.size() * model.dimension());
     model.embed_documents(warm.data(), warm.size(), out.data(), out.size());
   }
 
@@ -133,7 +138,8 @@ int main(int argc, char** argv) {
   const auto deadline = started + std::chrono::duration<double>(config.seconds);
 
   const auto worker = [&](int id) {
-    std::vector<float> out(static_cast<std::size_t>(config.batch) * dim);
+    const embed::Embedder& model = models[static_cast<std::size_t>(id) % models.size()];
+    std::vector<float> out(static_cast<std::size_t>(config.batch) * model.dimension());
     std::vector<double> local;
     std::size_t cursor = static_cast<std::size_t>(id) * 97;
 

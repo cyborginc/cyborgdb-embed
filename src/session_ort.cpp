@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <cmath>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -13,9 +14,35 @@
 namespace cyborgdb::embed::detail {
 namespace {
 
-// One environment per process: ONNX Runtime expects it, and sessions share it.
+// One environment per process: ONNX Runtime expects it, and every session runs
+// on its thread pool. The first session creates it, which fixes the pool size.
+struct Runtime {
+  std::mutex mutex;
+  bool started = false;
+  int threads = 1;
+};
+
+Runtime& runtime() {
+  static Runtime instance;
+  return instance;
+}
+
 Ort::Env& environment() {
-  static Ort::Env env(ORT_LOGGING_LEVEL_WARNING, "cyborgdb-embed");
+  Runtime& state = runtime();
+  std::lock_guard<std::mutex> guard(state.mutex);
+  // A local static, not a member of Runtime: constructing it creates ONNX
+  // Runtime's own statics, so it is destroyed before them. Held anywhere
+  // constructed earlier, its destructor runs after them and aborts at exit.
+  static Ort::Env env = [&] {
+    Ort::ThreadingOptions threading;
+    threading.SetGlobalIntraOpNumThreads(state.threads);
+    threading.SetGlobalInterOpNumThreads(1);
+    // Idle pool threads otherwise busy-wait after each call, holding cores in
+    // a host that embeds only now and then.
+    threading.SetGlobalSpinControl(0);
+    return Ort::Env(threading, ORT_LOGGING_LEVEL_WARNING, "cyborgdb-embed");
+  }();
+  state.started = true;
   return env;
 }
 
@@ -150,8 +177,23 @@ Status OrtSession::encode(const std::string_view* texts, std::size_t n,
 
 }  // namespace
 
+Status configure_runtime(const RuntimeConfig& config) {
+  if (config.threads < 1) {
+    return {StatusCode::InvalidArgument, "threads must be at least 1"};
+  }
+  Runtime& state = runtime();
+  std::lock_guard<std::mutex> guard(state.mutex);
+  if (state.started && config.threads != state.threads) {
+    return {StatusCode::InvalidArgument,
+            "the thread pool already started with " + std::to_string(state.threads) +
+                " threads; configure the runtime before the first open"};
+  }
+  state.threads = config.threads;
+  return {};
+}
+
 Status make_ort_session(const RegistryEntry& entry, Provider provider,
-                        Precision precision, int threads, const std::string& graph,
+                        Precision precision, const std::string& graph,
                         const std::string& tokenizer_json,
                         std::shared_ptr<Session>& out) {
   std::unique_ptr<Tokenizer> tokenizer;
@@ -167,7 +209,7 @@ Status make_ort_session(const RegistryEntry& entry, Provider provider,
     Ort::Env& env = environment();
 
     Ort::SessionOptions options;
-    options.SetIntraOpNumThreads(threads);
+    options.DisablePerSessionThreads();
     options.SetGraphOptimizationLevel(ORT_ENABLE_ALL);
 
     Ort::Session session(env, graph.c_str(), options);
