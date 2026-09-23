@@ -126,20 +126,17 @@ Regenerate with `python tests/bench/matrix.py --reference-python .venv-parity/bi
 
 Models are downloaded on first use and cached on disk.
 
-For air-gapped deployment:
+The cache lives in `$CYBORGDB_EMBED_CACHE`, else `$XDG_CACHE_HOME/cyborgdb-embed`, else `~/.cache/cyborgdb-embed`, laid out as `<org>_<model>/<revision>/model.onnx` and `tokenizer.json`. Files are verified against the registry's pinned digests when they are downloaded.
+
+For air-gapped deployment, populate a cache on a connected machine by opening each model you need once with `CYBORGDB_EMBED_CACHE` pointing at it, then copy that directory to the target:
 
 ```bash
-# On a connected machine
-cyborgdb-embed-fetch \
-  --model bge-base-en-v1.5 \
-  --cache ./embed-cache
-
 # On the target machine
 export CYBORGDB_EMBED_CACHE=/opt/cyborgdb/embed-cache
 export CYBORGDB_EMBED_OFFLINE=1
 ```
 
-Set `CYBORGDB_EMBED_OFFLINE=1` to fail on a cache miss without attempting network access. `CYBORGDB_EMBED_ENDPOINT` overrides the download host.
+`CYBORGDB_EMBED_OFFLINE`, set to any non-empty value, turns a cache miss into `NotCached` instead of a download. `CYBORGDB_EMBED_ENDPOINT` overrides the download host. `CacheConfig` sets the same things in code.
 
 ## Platform support
 
@@ -150,14 +147,33 @@ Linking adds roughly 18 MB to a stripped binary on macOS and Linux, nearly all o
 ## Development
 
 ```bash
-make build          # static library
-make test           # golden-vector tests; no Python required
-make parity         # compare against sentence-transformers
-make export MODEL=  # re-export a pooled ONNX graph
-make bench          # latency, concurrency, memory
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release   # fetches the prebuilt archives
+cmake --build build -j
+ctest --test-dir build --output-on-failure        # unit, runtime and golden-vector tests
 ```
 
-Python is only required for model regeneration and parity testing; building and using the library does not require it.
+The runtime and golden tests download models on first run.
+
+Parity against `sentence-transformers` needs torch, so it has its own environment:
+
+```bash
+python3 -m venv .venv-parity
+.venv-parity/bin/pip install -r tests/parity/requirements.txt -r scripts/requirements.txt
+cd tests/parity
+PYTHONPATH=. ../../.venv-parity/bin/python sweep.py \
+  --reference-python ../../.venv-parity/bin/python --python ../../.venv-parity/bin/python \
+  --embed-corpus ../../build/embed_corpus --models intfloat/e5-small-v2
+```
+
+Omit `--models` to run every model. The run writes each verdict back into `registry.yaml`.
+
+Adding a model means an entry in `registry.yaml`, then `scripts/pin_registry.py` to pin its revision and digests, a parity run for its verdict, `scripts/gen_registry.py --strict` to regenerate `src/registry_generated.hpp`, and a value in the `ModelId` enum.
+
+`build/bench` measures throughput, latency and memory; see [Performance](#performance).
+
+The prebuilt ONNX Runtime and tokenizer archives are rebuilt with `scripts/build_ort.sh all` and `scripts/build_tokenizer.sh all`. On Linux, run them through `scripts/in_manylinux.sh` so the archives link in a manylinux_2_28 wheel. Published archives come from the `release-artifacts` workflow, and `versions.json` holds the versions it builds.
+
+Python is only required for parity testing and registry maintenance; building and using the library does not require it.
 
 ## License
 
