@@ -106,7 +106,7 @@
     "embed-query": {
       "verdict_real": "numerically-equivalent",
       "verdict": "numerically-equivalent",
-      "cosine_min_real": 0.9999997615814209
+      "cosine_min_real": 0.9999998807907104
     }
   },
   "BAAI/bge-large-en-v1.5": {
@@ -189,7 +189,7 @@
     "embed-document": {
       "verdict_real": "numerically-equivalent",
       "verdict": "numerically-equivalent",
-      "cosine_min_real": 0.9999998807907104
+      "cosine_min_real": 0.9999997615814209
     },
     "embed-query": {
       "verdict_real": "numerically-equivalent",
@@ -216,6 +216,160 @@
     "embed-query": {
       "verdict_real": "numerically-equivalent",
       "verdict": "close-but-drifting",
+      "cosine_min_real": 0.9999998807907104
+    }
+  },
+  "sentence-transformers/paraphrase-MiniLM-L6-v2": {
+    "ort-document": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999997615814209
+    },
+    "ort-query": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999997615814209
+    },
+    "embed-document": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999997615814209
+    },
+    "embed-query": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999997615814209
+    }
+  },
+  "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2": {
+    "ort-document": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998211860657
+    },
+    "ort-query": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998211860657
+    },
+    "embed-document": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998211860657
+    },
+    "embed-query": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998211860657
+    }
+  },
+  "sentence-transformers/paraphrase-multilingual-mpnet-base-v2": {
+    "ort-document": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998211860657
+    },
+    "ort-query": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998211860657
+    },
+    "embed-document": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999997615814209
+    },
+    "embed-query": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999997615814209
+    }
+  },
+  "sentence-transformers/multi-qa-MiniLM-L6-cos-v1": {
+    "ort-document": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998807907104
+    },
+    "ort-query": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998807907104
+    },
+    "embed-document": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998807907104
+    },
+    "embed-query": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998807907104
+    }
+  },
+  "intfloat/multilingual-e5-base": {
+    "ort-document": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998807907104
+    },
+    "ort-query": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998807907104
+    },
+    "embed-document": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998807907104
+    },
+    "embed-query": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998807907104
+    }
+  },
+  "mixedbread-ai/mxbai-embed-large-v1": {
+    "ort-document": {
+      "verdict_real": "retrieval-equivalent",
+      "verdict": "retrieval-equivalent",
+      "cosine_min_real": 0.999998927116394
+    },
+    "ort-query": {
+      "verdict_real": "retrieval-equivalent",
+      "verdict": "retrieval-equivalent",
+      "cosine_min_real": 0.9999991655349731
+    },
+    "embed-document": {
+      "verdict_real": "retrieval-equivalent",
+      "verdict": "retrieval-equivalent",
+      "cosine_min_real": 0.9999988675117493
+    },
+    "embed-query": {
+      "verdict_real": "retrieval-equivalent",
+      "verdict": "retrieval-equivalent",
+      "cosine_min_real": 0.9999991655349731
+    }
+  },
+  "Snowflake/snowflake-arctic-embed-m-v1.5": {
+    "ort-document": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998807907104
+    },
+    "ort-query": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998807907104
+    },
+    "embed-document": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
+      "cosine_min_real": 0.9999998807907104
+    },
+    "embed-query": {
+      "verdict_real": "numerically-equivalent",
+      "verdict": "numerically-equivalent",
       "cosine_min_real": 0.9999998807907104
     }
   }

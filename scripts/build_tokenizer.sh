@@ -84,10 +84,19 @@ isolate() {
   local object="$staging/tokenizer_isolated.o"
   if [[ "$(uname)" == "Darwin" ]]; then
     printf '_%s\n' "${EXPORTS[@]}" > "$keep"
-    ld -r -arch "$(uname -m)" \
-      -platform_version macos "$MACOSX_DEPLOYMENT_TARGET" "$(xcrun --show-sdk-version)" \
-      -exported_symbols_list "$keep" -o "$object" "$staging"/*.o 2>&1 \
-      | grep -viE "was built for newer" || true
+    # The unwind tables name the personality routine rather than pointing at
+    # it, and linkers before Xcode 15 (conda's ld64 among them) resolve that name
+    # only against a non-local symbol. So it leaves the first pass global and the
+    # second makes it private extern: resolvable within the consumer's link, and
+    # still never exported from it.
+    local first="$CARGO_TARGET_DIR/isolate-first.o"
+    { cat "$keep"; echo _rust_eh_personality; } > "$CARGO_TARGET_DIR/isolate-first.txt"
+    local platform=(-arch "$(uname -m)"
+      -platform_version macos "$MACOSX_DEPLOYMENT_TARGET" "$(xcrun --show-sdk-version)")
+    ld -r "${platform[@]}" -exported_symbols_list "$CARGO_TARGET_DIR/isolate-first.txt" \
+      -o "$first" "$staging"/*.o 2>&1 | grep -viE "was built for newer" || true
+    ld -r "${platform[@]}" -exported_symbols_list "$keep" -keep_private_externs \
+      -o "$object" "$first"
   else
     printf '%s\n' "${EXPORTS[@]}" > "$keep"
     # Mach-O's partial link drops unreachable code on its own; ELF needs to be
@@ -109,12 +118,9 @@ isolate() {
   rm -f "$out"
   ar rcs "$out" "$object"
 
-  # Count strong exports, not every symbol: weak ones are COMDAT instantiations
-  # that deduplicate safely, and the failure that matters is the Rust runtime
-  # leaking out as strong definitions.
+  # The failure that matters is the Rust runtime leaking out as strong exports.
   local found
-  found="$(nm -g --defined-only "$out" 2>/dev/null \
-    | awk '$2 ~ /^[TDBR]$/ {print $3}' | sed 's/^_//' | sort -u)"
+  found="$("$ROOT/scripts/exported_symbols.sh" "$out")"
   echo "$out: $(wc -c < "$out") bytes"
   printf '  %s\n' $found
   [[ "$(echo "$found" | wc -l | tr -d ' ')" == "${#EXPORTS[@]}" ]] || {

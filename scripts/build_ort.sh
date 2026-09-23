@@ -270,8 +270,7 @@ vendor() {
   # collisions that matter are strong.
   local archive="$VENDOR/prebuilt/$PLATFORM/libonnxruntime.a"
   local strong weak
-  strong="$(nm -g --defined-only "$archive" 2>/dev/null \
-    | awk '$2 ~ /^[TDBR]$/ {print $3}' | sed 's/^_//' | sort -u)"
+  strong="$("$ROOT/scripts/exported_symbols.sh" "$archive")"
   weak="$(nm -g --defined-only "$archive" 2>/dev/null \
     | awk '$2 ~ /^[WVS]$/' | wc -l | tr -d ' ')"
   echo "$archive: $(wc -c < "$archive") bytes, $weak weak"

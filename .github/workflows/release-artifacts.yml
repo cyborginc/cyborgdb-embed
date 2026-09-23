@@ -96,8 +96,7 @@ jobs:
       - name: strong exports only
         run: |
           archive=$(ls lib*-${{ matrix.platform }}.a)
-          found=$(nm -g --defined-only "$archive" 2>/dev/null \
-            | awk '$2 ~ /^[TDBR]$/ {print $3}' | sed 's/^_//' | sort -u)
+          found=$(./scripts/exported_symbols.sh "$archive")
           echo "$archive: $(echo "$found" | tr '\n' ' ')"
           limit=3; [ "${{ matrix.component }}" = onnxruntime ] && limit=2
           [ "$(echo "$found" | wc -l)" -le "$limit" ] || { echo "leaks strong symbols"; exit 1; }
@@ -167,6 +166,22 @@ jobs:
           cmake --build build -j
           ctest --test-dir build --output-on-failure
           ./scripts/check_size.sh build/size_probe
+
+      # conda-forge's ld64 predates Xcode 15's linker and is stricter: it
+      # resolves an unwind table's reference to a personality routine only against
+      # a non-local symbol. Wheels built with a conda toolchain link with it.
+      - if: runner.os == 'macOS'
+        uses: mamba-org/setup-micromamba@v2
+        with:
+          environment-name: ld64
+          create-args: -c conda-forge ld64=956.6
+          cache-environment: true
+      - if: runner.os == 'macOS'
+        name: links with conda-forge's ld64
+        run: |
+          cmake -S . -B build-ld64 -DCMAKE_BUILD_TYPE=Release \
+            "-DCMAKE_EXE_LINKER_FLAGS=--ld-path=$MAMBA_ROOT_PREFIX/envs/ld64/bin/ld"
+          cmake --build build-ld64 --target size_probe -j
 
   publish:
     needs: build
