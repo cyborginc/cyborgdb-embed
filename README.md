@@ -14,7 +14,7 @@ include(FetchContent)
 FetchContent_Declare(
   cyborgdb_embed
   GIT_REPOSITORY https://github.com/cyborg/cyborgdb-embed.git
-  GIT_TAG v0.1.0
+  GIT_TAG v0.2.0
 )
 
 FetchContent_MakeAvailable(cyborgdb_embed)
@@ -57,6 +57,29 @@ model.embed_documents(
 Documents and queries use separate calls because some models require asymmetric prefixes such as `query:` and `passage:`.
 
 `Embedder` is cheap to copy and thread-safe. Copies of the same model share one in-process session and one copy of the weights.
+
+### Looking up a model by name
+
+`find_model` accepts the names `sentence-transformers` accepts: the full upstream id (`sentence-transformers/all-MiniLM-L6-v2`) or a bare name (`all-MiniLM-L6-v2`), matched case-insensitively.
+
+```cpp
+embed::ModelId id;
+if (auto s = embed::find_model(configured_name, id); !s) {
+  return s;  // InvalidArgument, listing the supported models
+}
+```
+
+Hosted API models such as `text-embedding-3-small` are rejected with a message saying so.
+
+### Threads
+
+Every model runs on one process-wide ONNX Runtime thread pool, so opening another model adds its weights but no threads. Size the pool once, before the first `open`:
+
+```cpp
+embed::configure_runtime(embed::RuntimeConfig{4});
+```
+
+The default is one thread per call; throughput is expected to come from concurrent callers. The pool lives for the rest of the process, so after the first `open` only the value already in force is accepted and any other returns `InvalidArgument`. An application with a per-client thread setting should call `configure_runtime` once at startup and treat `InvalidArgument` as two clients asking for different sizes.
 
 ## Supported models
 

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 
 project(cyborgdb_embed
-  VERSION 0.1.0
+  VERSION 0.2.0
   DESCRIPTION "Text embedding numerically equivalent to sentence-transformers"
   LANGUAGES CXX)
 
@@ -94,6 +94,10 @@ if(CYBORGDB_EMBED_BUILD_TESTS)
   add_executable(error_test tests/unit/error_test.cpp)
   target_link_libraries(error_test PRIVATE cyborgdb::embed)
   add_test(NAME errors COMMAND error_test)
+
+  add_executable(runtime_test tests/unit/runtime_test.cpp)
+  target_link_libraries(runtime_test PRIVATE cyborgdb::embed Threads::Threads)
+  add_test(NAME runtime COMMAND runtime_test)
 
   add_executable(golden_test tests/golden_test.cpp)
   target_link_libraries(golden_test PRIVATE cyborgdb::embed)

@@ -1,3 +1,4 @@
 - Add support for model quantization levels
 - Add support for CUDA backend
 - Add support for CoreML backend
+- Add support for hosted embedding model providers (with API key passed in)
