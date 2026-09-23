@@ -74,6 +74,12 @@ struct Status {
   explicit operator bool() const noexcept { return ok(); }
 };
 
+// Resolves a name the way sentence-transformers does: the upstream repository
+// ("sentence-transformers/all-MiniLM-L6-v2"), or a bare name, which it qualifies
+// with "sentence-transformers/". Case-insensitive. An unsupported name returns
+// InvalidArgument listing the supported models.
+Status find_model(std::string_view name, ModelId& out);
+
 // ---------------------------------------------------------------------------
 // Providers
 // ---------------------------------------------------------------------------
@@ -104,9 +110,6 @@ bool precision_available(ModelId, Precision) noexcept;
 // ---------------------------------------------------------------------------
 
 struct Options {
-  // Threads within a single call. Parallelism is expected to come from
-  // concurrent callers, which reaches the same throughput on less memory.
-  int threads = 1;
   Provider provider = Provider::CPU;
   Precision precision = Precision::Fp32;
 };
@@ -159,6 +162,23 @@ class Embedder {
 // Downloads and verifies the model if it is not already cached, then loads it.
 // Returns a handle onto the existing session when one matches.
 Status open(ModelId, const Options&, Embedder& out);
+
+// ---------------------------------------------------------------------------
+// Runtime
+// ---------------------------------------------------------------------------
+
+// Process-wide, like the sessions: every model runs on one thread pool, so
+// opening another model adds its weights but no threads.
+struct RuntimeConfig {
+  // Threads within a single call. Parallelism is expected to come from
+  // concurrent callers, which reaches the same throughput on less memory.
+  int threads = 1;
+};
+
+// Call before the first open. The first open creates the pool and it lives for
+// the rest of the process, so from then on only the value already in force is
+// accepted; any other returns InvalidArgument.
+Status configure_runtime(const RuntimeConfig&);
 
 // ---------------------------------------------------------------------------
 // Download cache

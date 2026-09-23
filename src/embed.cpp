@@ -1,6 +1,7 @@
 #include "cyborgdb_embed/embed.hpp"
 
 #include <algorithm>
+#include <cctype>
 
 #include "session_store.hpp"
 #include "ort_api.hpp"
@@ -15,6 +16,25 @@ const detail::RegistryEntry* find(ModelId id) noexcept {
     if (entry.info.id == id) return &entry;
   }
   return nullptr;
+}
+
+bool equals_ignoring_case(std::string_view a, std::string_view b) noexcept {
+  return a.size() == b.size() &&
+         std::equal(a.begin(), a.end(), b.begin(), [](char x, char y) {
+           return std::tolower(static_cast<unsigned char>(x)) ==
+                  std::tolower(static_cast<unsigned char>(y));
+         });
+}
+
+// OpenAI's embedding models: named often enough in configurations carried over
+// from a hosted setup that they deserve a clearer answer than "unknown".
+bool is_hosted_model(std::string_view name) noexcept {
+  const std::string_view bare = name.substr(name.rfind('/') + 1);
+  constexpr std::string_view kThirdGeneration = "text-embedding-3-";
+  return equals_ignoring_case(bare, "text-embedding-ada-002") ||
+         (bare.size() > kThirdGeneration.size() &&
+          equals_ignoring_case(bare.substr(0, kThirdGeneration.size()),
+                               kThirdGeneration));
 }
 
 }  // namespace
@@ -32,6 +52,31 @@ const ModelInfo& info(ModelId id) noexcept {
   const detail::RegistryEntry* entry = find(id);
   // Unreachable for any value of the generated enum.
   return entry != nullptr ? entry->info : detail::kModels[0];
+}
+
+Status find_model(std::string_view name, ModelId& out) {
+  std::string qualified;
+  if (name.find('/') == std::string_view::npos) {
+    qualified = "sentence-transformers/" + std::string(name);
+  }
+  const std::string_view wanted = qualified.empty() ? name : qualified;
+  for (const auto& entry : detail::kRegistry) {
+    if (equals_ignoring_case(entry.info.name, wanted)) {
+      out = entry.info.id;
+      return {};
+    }
+  }
+
+  std::string supported;
+  for (const auto& entry : detail::kRegistry) {
+    if (!supported.empty()) supported += ", ";
+    supported += entry.info.name;
+  }
+  const std::string reason = is_hosted_model(name)
+                                 ? " is a hosted API model, not supported"
+                                 : " is not a supported model";
+  return {StatusCode::InvalidArgument,
+          std::string(name) + reason + "; supported: " + supported};
 }
 
 // ---------------------------------------------------------------------------
@@ -99,13 +144,10 @@ Status open(ModelId id, const Options& options, Embedder& out) {
   if (entry == nullptr) {
     return {StatusCode::InvalidArgument, "unknown model"};
   }
-  if (options.threads < 1) {
-    return {StatusCode::InvalidArgument, "threads must be at least 1"};
-  }
 
   std::shared_ptr<detail::Session> session;
   if (Status status = detail::SessionStore::instance().acquire(
-          *entry, options.provider, options.precision, options.threads, session);
+          *entry, options.provider, options.precision, session);
       !status) {
     return status;
   }
@@ -117,8 +159,12 @@ Status open(ModelId id, const Options& options, Embedder& out) {
 }
 
 // ---------------------------------------------------------------------------
-// Cache
+// Runtime and cache
 // ---------------------------------------------------------------------------
+
+Status configure_runtime(const RuntimeConfig& config) {
+  return detail::configure_runtime(config);
+}
 
 Status configure_cache(const CacheConfig& config) {
   return detail::SessionStore::instance().configure(config);
