@@ -28,6 +28,13 @@ enum class ModelId {
   E5BaseV2,
   E5LargeV2,
   MultilingualE5Small,
+  ParaphraseMiniLmL6V2,
+  ParaphraseMultilingualMiniLmL12V2,
+  ParaphraseMultilingualMpnetBaseV2,
+  MultiQaMiniLmL6CosV1,
+  MultilingualE5Base,
+  MxbaiEmbedLargeV1,
+  SnowflakeArcticEmbedMV15,
 };
 
 struct ModelInfo {

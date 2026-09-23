@@ -46,8 +46,10 @@ def write_verdicts(summary):
         if match:
             current = match.group(1)
             continue
-        if current and re.match(r"\s*parity:", line):
-            results = summary.get(current) or {}
+        # A model outside this run keeps its verdict; blanking it would unship
+        # every model a partial run did not happen to cover.
+        if current in summary and re.match(r"\s*parity:", line):
+            results = summary[current]
             verdicts = {v.get("verdict_real") for k, v in results.items()
                         if k.startswith("embed-") and isinstance(v, dict)}
             # Document and query must agree; a split verdict is not a verdict.

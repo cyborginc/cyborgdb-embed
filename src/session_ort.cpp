@@ -57,10 +57,12 @@ class OrtSession final : public Session {
  public:
   OrtSession(const RegistryEntry& registry_entry, Provider used_provider,
              Precision used_precision, Ort::Session&& session,
-             std::unique_ptr<Tokenizer> tokenizer, bool needs_token_type_ids)
+             std::unique_ptr<Tokenizer> tokenizer, bool needs_token_type_ids,
+             std::string hidden_output)
       : session_(std::move(session)),
         tokenizer_(std::move(tokenizer)),
-        needs_token_type_ids_(needs_token_type_ids) {
+        needs_token_type_ids_(needs_token_type_ids),
+        hidden_output_(std::move(hidden_output)) {
     entry = &registry_entry;
     provider = used_provider;
     precision = used_precision;
@@ -74,6 +76,7 @@ class OrtSession final : public Session {
   mutable Ort::Session session_;
   std::unique_ptr<Tokenizer> tokenizer_;
   bool needs_token_type_ids_;
+  std::string hidden_output_;
 };
 
 Status OrtSession::encode(const std::string_view* texts, std::size_t n,
@@ -152,7 +155,7 @@ Status OrtSession::encode(const std::string_view* texts, std::size_t n,
           memory, token_types.data(), token_types.size(), shape.data(), shape.size()));
     }
 
-    const char* outputs[] = {"last_hidden_state"};
+    const char* outputs[] = {hidden_output_.c_str()};
     std::vector<Ort::Value> result;
     try {
       result = session_.Run(Ort::RunOptions{nullptr}, names.data(), inputs.data(),
@@ -223,8 +226,25 @@ Status make_ort_session(const RegistryEntry& entry, Provider provider,
       }
     }
 
+    // Pooling runs here, so the graph must expose per-token states. Plain
+    // transformer exports name them last_hidden_state; sentence-transformers
+    // exports call them token_embeddings, beside a pooled output that is unused.
+    std::string hidden_output;
+    for (std::size_t i = 0; i < session.GetOutputCount(); ++i) {
+      std::string name = session.GetOutputNameAllocated(i, allocator).get();
+      if (name == "last_hidden_state" ||
+          (name == "token_embeddings" && hidden_output.empty())) {
+        hidden_output = std::move(name);
+      }
+    }
+    if (hidden_output.empty()) {
+      return {StatusCode::ModelLoadFailed,
+              "graph has neither a last_hidden_state nor a token_embeddings output"};
+    }
+
     out = std::make_shared<OrtSession>(entry, provider, precision, std::move(session),
-                                       std::move(tokenizer), needs_token_type_ids);
+                                       std::move(tokenizer), needs_token_type_ids,
+                                       std::move(hidden_output));
   } catch (const Ort::Exception& error) {
     return {StatusCode::ModelLoadFailed, error.what()};
   }

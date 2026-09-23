@@ -32,7 +32,8 @@ def main(strict):
 
     incomplete = []
     for model in models:
-        missing = [field for field in REQUIRED if not model.get(field)]
+        # normalize: false is a value, so only absent or empty fields count.
+        missing = [field for field in REQUIRED if model.get(field) in (None, "")]
         # An unpinned model can change underneath a built index, so shipping one
         # is worse than not supporting it.
         unpinned = [f for f in ("revision", "onnx_sha256", "tokenizer_sha256", "parity")

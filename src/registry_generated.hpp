@@ -7,7 +7,7 @@
 
 namespace cyborgdb::embed::detail {
 
-inline constexpr std::string_view kRegistryVersion = "1321a563d85e";
+inline constexpr std::string_view kRegistryVersion = "14afbc250ac9";
 
 enum class Pooling { ClsToken, MeanTokens, MaxTokens };
 
@@ -132,6 +132,83 @@ inline constexpr RegistryEntry kRegistry[] = {
         "passage: ",
         Pooling::MeanTokens,
     },
+    {
+        {ModelId::ParaphraseMiniLmL6V2, "sentence-transformers/paraphrase-MiniLM-L6-v2",
+         "c9a2bfebc254878aee8c3aca9e6844d5bbb102d1", 384,
+         128, false},
+        "onnx/model.onnx",
+        "441a5dc61ff3b889892feeb7aa0400518cc9908603209c45861ba3abef3006bc",
+        "5fd1c882abbd30517dced455a2c9768945ec726b96727927e4959348d9de550b",
+        "",
+        "",
+        Pooling::MeanTokens,
+    },
+    {
+        {ModelId::ParaphraseMultilingualMiniLmL12V2, "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+         "e8f8c211226b894fcb81acc59f3b34ba3efd5f42", 384,
+         128, false},
+        "onnx/model.onnx",
+        "10f7a088420252b26caf819236ca2c9d2987afd0fc06fec7553b542a5655a05a",
+        "2c3387be76557bd40970cec13153b3bbf80407865484b209e655e5e4729076b8",
+        "",
+        "",
+        Pooling::MeanTokens,
+    },
+    {
+        {ModelId::ParaphraseMultilingualMpnetBaseV2, "sentence-transformers/paraphrase-multilingual-mpnet-base-v2",
+         "4328cf26390c98c5e3c738b4460a05b95f4911f5", 768,
+         128, false},
+        "onnx/model.onnx",
+        "253e00bb467fcdcac714a7b2443330c28ffbecb6d1f791c92caaf2af468bfbaa",
+        "2c3387be76557bd40970cec13153b3bbf80407865484b209e655e5e4729076b8",
+        "",
+        "",
+        Pooling::MeanTokens,
+    },
+    {
+        {ModelId::MultiQaMiniLmL6CosV1, "sentence-transformers/multi-qa-MiniLM-L6-cos-v1",
+         "b207367332321f8e44f96e224ef15bc607f4dbf0", 384,
+         512, true},
+        "onnx/model.onnx",
+        "826501e8460f6e1a83fa30a9b173f051100abda5559e1352efc0e3fe3136afc2",
+        "7fa9272f7ef1ebd1666bb3bfd9d4707660ff0076ca9d1671cd9a9c6e18e03331",
+        "",
+        "",
+        Pooling::MeanTokens,
+    },
+    {
+        {ModelId::MultilingualE5Base, "intfloat/multilingual-e5-base",
+         "d128750597153bb5987e10b1c3493a34e5a4502a", 768,
+         512, true},
+        "onnx/model.onnx",
+        "84a4d426f7e87a6bf5bf195f0bae2c4a7d15f675b23ca96f42fab8326d7a77aa",
+        "62c24cdc13d4c9952d63718d6c9fa4c287974249e16b7ade6d5a85e7bbb75626",
+        "query: ",
+        "passage: ",
+        Pooling::MeanTokens,
+    },
+    {
+        {ModelId::MxbaiEmbedLargeV1, "mixedbread-ai/mxbai-embed-large-v1",
+         "b33106f585b9ce46904ad7443a3b52b7a63e231c", 1024,
+         512, false},
+        "onnx/model.onnx",
+        "adb53ed475faa339bfad3bd2bdb7e6a30b4f47280ade9811f81bef7953f9ab77",
+        "d241a60d5e8f04cc1b2b3e9ef7a4921b27bf526d9f6050ab90f9267a1f9e5c66",
+        "Represent this sentence for searching relevant passages: ",
+        "",
+        Pooling::ClsToken,
+    },
+    {
+        {ModelId::SnowflakeArcticEmbedMV15, "Snowflake/snowflake-arctic-embed-m-v1.5",
+         "e58a8f756156a1293d763f17e3aae643474e9b8a", 768,
+         512, true},
+        "onnx/model.onnx",
+        "bc6f7662487a0796e6f86229c8e5c3ab2f7059e08e0bb2f524125273f72171c4",
+        "91f1def9b9391fdabe028cd3f3fcc4efd34e5d1f08c3bf2de513ebb5911a1854",
+        "Represent this sentence for searching relevant passages: ",
+        "",
+        Pooling::ClsToken,
+    },
 };
 
 inline constexpr ModelInfo kModels[] = {
@@ -145,9 +222,16 @@ inline constexpr ModelInfo kModels[] = {
     {ModelId::E5BaseV2, "intfloat/e5-base-v2", "f52bf8ec8c7124536f0efb74aca902b2995e5bcd", 768, 512, true},
     {ModelId::E5LargeV2, "intfloat/e5-large-v2", "f169b11e22de13617baa190a028a32f3493550b6", 1024, 512, true},
     {ModelId::MultilingualE5Small, "intfloat/multilingual-e5-small", "614241f622f53c4eeff9890bdc4f31cfecc418b3", 384, 512, true},
+    {ModelId::ParaphraseMiniLmL6V2, "sentence-transformers/paraphrase-MiniLM-L6-v2", "c9a2bfebc254878aee8c3aca9e6844d5bbb102d1", 384, 128, false},
+    {ModelId::ParaphraseMultilingualMiniLmL12V2, "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2", "e8f8c211226b894fcb81acc59f3b34ba3efd5f42", 384, 128, false},
+    {ModelId::ParaphraseMultilingualMpnetBaseV2, "sentence-transformers/paraphrase-multilingual-mpnet-base-v2", "4328cf26390c98c5e3c738b4460a05b95f4911f5", 768, 128, false},
+    {ModelId::MultiQaMiniLmL6CosV1, "sentence-transformers/multi-qa-MiniLM-L6-cos-v1", "b207367332321f8e44f96e224ef15bc607f4dbf0", 384, 512, true},
+    {ModelId::MultilingualE5Base, "intfloat/multilingual-e5-base", "d128750597153bb5987e10b1c3493a34e5a4502a", 768, 512, true},
+    {ModelId::MxbaiEmbedLargeV1, "mixedbread-ai/mxbai-embed-large-v1", "b33106f585b9ce46904ad7443a3b52b7a63e231c", 1024, 512, false},
+    {ModelId::SnowflakeArcticEmbedMV15, "Snowflake/snowflake-arctic-embed-m-v1.5", "e58a8f756156a1293d763f17e3aae643474e9b8a", 768, 512, true},
 };
 
-inline constexpr std::size_t kModelCount = 10;
+inline constexpr std::size_t kModelCount = 17;
 
 }  // namespace cyborgdb::embed::detail
 

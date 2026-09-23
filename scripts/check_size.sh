@@ -14,9 +14,9 @@ binary=${1:-build/size_probe}
 [ -f "$binary" ] || { echo "no binary at $binary; build the size_probe target"; exit 1; }
 
 case "$(uname -s)-$(uname -m)" in
-  Darwin-arm64)       budget_mb=22 ;;
-  Linux-aarch64)      budget_mb=28 ;;
-  Linux-x86_64)       budget_mb=28 ;;
+  Darwin-arm64)       budget_mb=19 ;;
+  Linux-aarch64)      budget_mb=19 ;;
+  Linux-x86_64)       budget_mb=20 ;;
   *) echo "no budget recorded for $(uname -s)-$(uname -m); skipping"; exit 0 ;;
 esac
 
