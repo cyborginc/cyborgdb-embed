@@ -44,6 +44,22 @@ std::size_t write_to_file(void* data, std::size_t size, std::size_t count,
   return out->good() ? size * count : 0;
 }
 
+// libcurl's default CA bundle is a path fixed at build time, which does not
+// exist on every distro, so find one at run time. Empty keeps the default.
+std::string ca_bundle() {
+  for (const char* var : {"CURL_CA_BUNDLE", "SSL_CERT_FILE"}) {
+    if (std::string path = env(var); !path.empty()) return path;
+  }
+  for (const char* path : {"/etc/ssl/certs/ca-certificates.crt",  // Debian/Ubuntu
+                           "/etc/pki/tls/certs/ca-bundle.crt",    // RHEL/Fedora
+                           "/etc/ssl/ca-bundle.pem",              // openSUSE
+                           "/etc/ssl/cert.pem"}) {                // Alpine/macOS/BSD
+    std::error_code ignored;
+    if (fs::is_regular_file(path, ignored)) return path;
+  }
+  return {};
+}
+
 Status download(const std::string& url, const fs::path& destination) {
   CURL* curl = curl_easy_init();
   if (curl == nullptr) {
@@ -62,6 +78,8 @@ Status download(const std::string& url, const fs::path& destination) {
   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_to_file);
   curl_easy_setopt(curl, CURLOPT_WRITEDATA, &out);
   curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1L);
+  const std::string ca = ca_bundle();
+  if (!ca.empty()) curl_easy_setopt(curl, CURLOPT_CAINFO, ca.c_str());
 
   std::array<char, CURL_ERROR_SIZE> error{};
   curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, error.data());
