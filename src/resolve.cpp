@@ -3,11 +3,15 @@
 #include <curl/curl.h>
 #include <openssl/evp.h>
 
+#include <algorithm>
 #include <array>
+#include <chrono>
 #include <cstdio>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <random>
+#include <thread>
 
 namespace cyborgdb::embed::detail {
 namespace {
@@ -60,16 +64,31 @@ std::string ca_bundle() {
   return {};
 }
 
-Status download(const std::string& url, const fs::path& destination) {
+// Hugging Face rate-limits anonymous downloads per IP, which CI runners share; HF_TOKEN lifts that. It is sent only to
+// huggingface.co (curl drops it on redirects to other hosts), never to a CYBORGDB_EMBED_ENDPOINT mirror.
+std::string auth_header(const std::string& url) {
+  if (url.rfind("https://huggingface.co/", 0) != 0) return {};
+  std::string token = env("HF_TOKEN");
+  if (token.empty()) token = env("HUGGING_FACE_HUB_TOKEN");
+  return token.empty() ? std::string() : "Authorization: Bearer " + token;
+}
+
+struct Attempt {
+  Status status;
+  bool transient = false;  // worth retrying: rate limit, server error, network hiccup
+  long retry_after = 0;    // seconds the server asked for, if any
+};
+
+Attempt download_once(const std::string& url, const fs::path& destination) {
   CURL* curl = curl_easy_init();
   if (curl == nullptr) {
-    return {StatusCode::DownloadFailed, "could not initialise curl"};
+    return {{StatusCode::DownloadFailed, "could not initialise curl"}};
   }
 
-  std::ofstream out(destination, std::ios::binary);
+  std::ofstream out(destination, std::ios::binary | std::ios::trunc);
   if (!out) {
     curl_easy_cleanup(curl);
-    return {StatusCode::DownloadFailed, "cannot write to " + destination.string()};
+    return {{StatusCode::DownloadFailed, "cannot write to " + destination.string()}};
   }
 
   curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
@@ -80,21 +99,56 @@ Status download(const std::string& url, const fs::path& destination) {
   curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1L);
   const std::string ca = ca_bundle();
   if (!ca.empty()) curl_easy_setopt(curl, CURLOPT_CAINFO, ca.c_str());
+  curl_slist* headers = nullptr;
+  if (const std::string auth = auth_header(url); !auth.empty()) {
+    headers = curl_slist_append(headers, auth.c_str());
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+  }
 
   std::array<char, CURL_ERROR_SIZE> error{};
   curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, error.data());
 
   const CURLcode code = curl_easy_perform(curl);
+  long http = 0;
+  curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http);
+  curl_off_t retry_after = 0;
+  curl_easy_getinfo(curl, CURLINFO_RETRY_AFTER, &retry_after);
+  curl_slist_free_all(headers);
   curl_easy_cleanup(curl);
   out.close();
 
-  if (code != CURLE_OK) {
-    std::error_code ignored;
-    fs::remove(destination, ignored);
-    const std::string detail = error[0] != '\0' ? error.data() : curl_easy_strerror(code);
-    return {StatusCode::DownloadFailed, url + ": " + detail};
+  if (code == CURLE_OK) return {};
+  std::error_code ignored;
+  fs::remove(destination, ignored);
+  const std::string detail = error[0] != '\0' ? error.data() : curl_easy_strerror(code);
+  Attempt failed{{StatusCode::DownloadFailed, url + ": " + detail}};
+  failed.transient = http == 429 || http >= 500 || code == CURLE_OPERATION_TIMEDOUT ||
+                     code == CURLE_COULDNT_CONNECT || code == CURLE_COULDNT_RESOLVE_HOST ||
+                     code == CURLE_SEND_ERROR || code == CURLE_RECV_ERROR ||
+                     code == CURLE_GOT_NOTHING || code == CURLE_PARTIAL_FILE;
+  failed.retry_after = static_cast<long>(retry_after);
+  return failed;
+}
+
+// Retries transient failures with exponential backoff (1, 2, 4, 8 s, or the server's Retry-After up to 60 s);
+// anything else, like a 404, fails at once.
+Status download(const std::string& url, const fs::path& destination) {
+  constexpr int kAttempts = 5;
+  for (int attempt = 1;; ++attempt) {
+    Attempt result = download_once(url, destination);
+    if (result.status.ok() || !result.transient || attempt == kAttempts) return result.status;
+    const long wait = std::min(60L, std::max(1L << (attempt - 1), result.retry_after));
+    std::this_thread::sleep_for(std::chrono::seconds(wait));
   }
-  return {};
+}
+
+// A name no other process or thread will pick for the same file.
+std::string unique_suffix() {
+  std::random_device random;
+  const unsigned long long value = (static_cast<unsigned long long>(random()) << 32) ^ random();
+  char hex[17];
+  std::snprintf(hex, sizeof hex, "%016llx", value);
+  return hex;
 }
 
 }  // namespace
@@ -171,8 +225,11 @@ Status ensure_file(std::string_view model, std::string_view revision,
                           std::string(revision) + "/" + std::string(repo_path);
 
   // Download beside the target and rename, so an interrupted transfer never
-  // leaves a partial file that later looks cached.
-  const fs::path partial = path + ".partial";
+  // leaves a partial file that later looks cached. The name is unique per call:
+  // processes sharing a cache (parallel test runners) fetch the same file at
+  // once, and a shared name let their writes interleave and fail verification.
+  // Each verifies its own copy and the rename is atomic, so the last one wins.
+  const fs::path partial = path + ".partial-" + unique_suffix();
   if (Status status = download(url, partial); !status) return status;
 
   std::string digest;
