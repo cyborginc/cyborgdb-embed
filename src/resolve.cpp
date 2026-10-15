@@ -73,6 +73,11 @@ std::string auth_header(const std::string& url) {
   return token.empty() ? std::string() : "Authorization: Bearer " + token;
 }
 
+// Added in curl 7.66.0; the manylinux_2_28 image has 7.61.1 headers. The value is ABI, so declaring it is safe.
+#if LIBCURL_VERSION_NUM < 0x074200
+constexpr CURLINFO CURLINFO_RETRY_AFTER = static_cast<CURLINFO>(CURLINFO_OFF_T + 57);
+#endif
+
 struct Attempt {
   Status status;
   bool transient = false;  // worth retrying: rate limit, server error, network hiccup
