@@ -238,6 +238,31 @@ void digest_mismatch(const fs::path& scratch) {
   expect(!fs::exists(cached), "a mismatched download is discarded");
 }
 
+// Processes sharing a cache (parallel test runners) fetch the same file at
+// once. A fetch must download into a temporary file of its own: with a shared
+// name, one process truncated, renamed or deleted another's half-written copy,
+// and that one then failed verification or could not read its download.
+void foreign_partial(const fs::path& scratch) {
+  const embed::ModelInfo& info = embed::info(embed::ModelId::BgeSmallEnV15);
+  embed::CacheConfig config;
+  config.cache_dir = (scratch / "foreign").string();
+  config.endpoint = fake_endpoint(scratch / "foreign-served", info, "this is not an onnx graph");
+  embed::configure_cache(config);
+
+  const fs::path dir = fs::path(config.cache_dir) / "BAAI_bge-small-en-v1.5" / std::string(info.revision);
+  fs::create_directories(dir);
+  const fs::path theirs = dir / "model.onnx.partial";
+  std::ofstream(theirs) << "another process is still downloading this";
+
+  embed::Embedder model;
+  expect_code(embed::open(embed::ModelId::BgeSmallEnV15, {}, model), embed::StatusCode::DigestMismatch,
+              "the fetch verifies its own download");
+  std::ifstream in(theirs);
+  std::string left;
+  std::getline(in, left);
+  expect(left == "another process is still downloading this", "another process's download is left alone");
+}
+
 // A cached file is not re-verified on use: digests are checked when a file is
 // downloaded, not on every open. So corruption after the fact has to surface as
 // a clean failure rather than a crash or a plausible vector.
@@ -364,6 +389,7 @@ int main() {
   offline_miss(scratch);
   download_failure(scratch);
   digest_mismatch(scratch);
+  foreign_partial(scratch);
   corrupt_graph(scratch, cached_file("tokenizer.json"));
   corrupt_tokenizer(scratch, cached_file("model.onnx"));
   load_accounting();
