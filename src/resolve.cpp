@@ -102,6 +102,10 @@ Attempt download_once(const std::string& url, const fs::path& destination) {
   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_to_file);
   curl_easy_setopt(curl, CURLOPT_WRITEDATA, &out);
   curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1L);
+  // No total timeout, since model files are large; abort a stalled transfer so it can be retried.
+  curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 15L);
+  curl_easy_setopt(curl, CURLOPT_LOW_SPEED_LIMIT, 1L);
+  curl_easy_setopt(curl, CURLOPT_LOW_SPEED_TIME, 30L);
   const std::string ca = ca_bundle();
   if (!ca.empty()) curl_easy_setopt(curl, CURLOPT_CAINFO, ca.c_str());
   curl_slist* headers = nullptr;
@@ -229,25 +233,28 @@ Status ensure_file(std::string_view model, std::string_view revision,
   const std::string url = config.endpoint + "/" + std::string(model) + "/resolve/" +
                           std::string(revision) + "/" + std::string(repo_path);
 
-  // Download beside the target and rename, so an interrupted transfer never
-  // leaves a partial file that later looks cached. The name is unique per call:
-  // processes sharing a cache (parallel test runners) fetch the same file at
-  // once, and a shared name let their writes interleave and fail verification.
-  // Each verifies its own copy and the rename is atomic, so the last one wins.
-  const fs::path partial = path + ".partial-" + unique_suffix();
-  if (Status status = download(url, partial); !status) return status;
+  // Download beside the target and rename, so an interrupted transfer never looks cached.
+  // The name is unique per call because processes sharing a cache may fetch the same file at once.
+  // The partial is removed on every exit; after a successful rename that is a no-op.
+  struct PartialFile {
+    fs::path path;
+    ~PartialFile() {
+      std::error_code ignored;
+      fs::remove(path, ignored);
+    }
+  } partial{path + ".partial-" + unique_suffix()};
+  if (Status status = download(url, partial.path); !status) return status;
 
   std::string digest;
-  if (Status status = sha256_file(partial.string(), digest); !status) return status;
+  if (Status status = sha256_file(partial.path.string(), digest); !status) return status;
 
   if (digest != expected) {
-    fs::remove(partial, code);
     return {StatusCode::DigestMismatch, std::string(model) + "/" +
                 std::string(repo_path) + ": expected " + std::string(expected) +
                 ", got " + digest};
   }
 
-  fs::rename(partial, path, code);
+  fs::rename(partial.path, path, code);
   if (code) {
     return {StatusCode::DownloadFailed, "cannot finalise " + path + ": " + code.message()};
   }
