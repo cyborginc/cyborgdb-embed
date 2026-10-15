@@ -14,7 +14,8 @@
 #
 # Versions live in versions.json, which is the only place either is written.
 # To publish: push the component tag, let the release workflow build and upload,
-# then paste the digests it prints into this file.
+# then paste the digests it prints into this file. A manual release run with
+# `publish` set records them on its branch itself.
 
 # Composed from versions.json rather than written here, so a version cannot be
 # bumped in one place and forgotten in another.
