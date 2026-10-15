@@ -7,8 +7,10 @@
 #   ort-1.30.0-1          ONNX Runtime 1.30.0, first build
 #   tokenizers-0.23.2-1   tokenizers 0.23.2, first build
 #
-# A manual run builds candidates of both components and verifies them without
-# publishing anything. parity.yml takes that run's id to score the candidates.
+# A manual run builds candidates and verifies them. parity.yml takes that run's
+# id to score the candidates. With `publish`, a manual run on a branch also
+# publishes one component under the tag versions.json names, then commits the
+# digests to that branch, so a pin-bump pull request merges with a pin that builds.
 name: release-artifacts
 
 on:
@@ -17,6 +19,15 @@ on:
       - "ort-*"
       - "tokenizers-*"
   workflow_dispatch:
+    inputs:
+      component:
+        type: choice
+        options: [both, onnxruntime, tokenizers]
+        default: both
+      publish:
+        description: Publish after verifying, and commit the digests to this branch
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -27,14 +38,32 @@ jobs:
     outputs:
       components: ${{ steps.pick.outputs.components }}
     steps:
+      - uses: actions/checkout@v4
       - id: pick
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           case "${{ github.ref_type }}/${{ github.ref_name }}" in
             tag/ort-*)        components='["onnxruntime"]' ;;
             tag/tokenizers-*) components='["tokenizers"]' ;;
-            *)                components='["onnxruntime", "tokenizers"]' ;;
+            *)
+              case "${{ inputs.component }}" in
+                onnxruntime|tokenizers) components='["${{ inputs.component }}"]' ;;
+                *)
+                  [ "${{ inputs.publish }}" != true ] || { echo "publish takes one component"; exit 1; }
+                  components='["onnxruntime", "tokenizers"]' ;;
+              esac ;;
           esac
           echo "components=$components" >> "$GITHUB_OUTPUT"
+
+          # Checked here rather than at publish, which comes hours later and after approval.
+          if [ "${{ inputs.publish }}" = true ]; then
+            tag=$(./scripts/version.py ${{ inputs.component }} --tag)
+            if gh release view "$tag" >/dev/null 2>&1; then
+              echo "$tag is already published; bump the build number in versions.json"
+              exit 1
+            fi
+          fi
 
   build:
     needs: plan
@@ -184,29 +213,43 @@ jobs:
           cmake --build build-ld64 --target size_probe -j
 
   publish:
-    needs: build
-    if: github.ref_type == 'tag'
+    needs: [build, verify]
+    # verify runs only on manual runs, so a tag push publishes once build passes.
+    if: >-
+      ${{ !cancelled() && needs.build.result == 'success' &&
+      (github.ref_type == 'tag' || (inputs.publish && needs.verify.result == 'success')) }}
     # Gated on the release environment. The build runs unattended so its checks
     # and digests are on screen before anyone approves; only making the archives
     # public needs a decision.
     environment: release
     permissions:
       contents: write
+      actions: write
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
+      - id: tag
+        run: |
+          if [ "${{ github.ref_type }}" = tag ]; then
+            tag="${{ github.ref_name }}"
+          else
+            tag=$(./scripts/version.py ${{ inputs.component }} --tag)
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
       - uses: actions/download-artifact@v4
         with:
           pattern: archive-*
           merge-multiple: true
+          path: dist
 
-      # Printed in the form the pin file expects, because the digests cannot
-      # exist before the archives are built and have to be recorded by hand.
       - name: digests for cmake/artifacts.cmake
         run: |
           {
             echo '## Paste into `CYBORGDB_EMBED_ARTIFACT_DIGESTS`'
             echo '```cmake'
-            for f in digest-*.txt; do
+            for f in dist/digest-*.txt; do
               while read -r sum path; do
                 name=$(basename "$path" .a | sed 's/^lib//')
                 printf '  "%s  %s"\n' "$name" "$sum"
@@ -216,13 +259,47 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
           cat "$GITHUB_STEP_SUMMARY"
 
+      # On a manual run this creates the tag at the commit that was built.
       - uses: softprops/action-gh-release@v2
         with:
-          files: lib*.a
+          tag_name: ${{ steps.tag.outputs.tag }}
+          target_commitish: ${{ github.sha }}
+          files: dist/lib*.a
           fail_on_unmatched_files: true
           # These are build inputs, not versions of the library. Leaving them
           # eligible makes whichever archive was published most recently the
           # repository's headline release.
           make_latest: false
           body: |
-            Prebuilt static archives for `${{ github.ref_name }}`.
+            Prebuilt static archives for `${{ steps.tag.outputs.tag }}`.
+
+      # A push made with the workflow token does not trigger pull_request, so
+      # CI is dispatched explicitly for the new head.
+      - name: record digests on ${{ github.ref_name }}
+        if: github.ref_type == 'branch'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ./scripts/record_digests.py dist/digest-*.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Record ${{ steps.tag.outputs.tag }} digests" -- cmake/artifacts.cmake
+          git push origin "HEAD:refs/heads/${{ github.ref_name }}"
+          gh workflow run ci.yml --ref "${{ github.ref_name }}"
+
+  # A run started by check-upstream.yml has no person to notify, so a failure is
+  # reported on the branch's pull request instead.
+  report-failure:
+    needs: [plan, build, verify, publish]
+    if: failure() && inputs.publish
+    permissions:
+      pull-requests: write
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          run_url="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          gh pr comment "${{ github.ref_name }}" --repo "${{ github.repository }}" \
+            --body "release-artifacts failed or was rejected: $run_url" \
+            || echo "no pull request for ${{ github.ref_name }}"
