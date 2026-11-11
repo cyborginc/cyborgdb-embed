@@ -180,6 +180,15 @@ jobs:
         env:
           CYBORGDB_EMBED_CACHE: ~/.cache/cyborgdb-embed
 
+  # The jobs above link the published archive, so the shim's own source is
+  # otherwise only exercised when a tokenizers-* tag is built.
+  tokenizer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo test --locked --manifest-path tokenizer/Cargo.toml
+
   registry:
     runs-on: ubuntu-latest
     steps:
