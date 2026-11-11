@@ -70,6 +70,18 @@ void mixed_batch() {
              .ok(),
          "embed_queries succeeds with flags");
   expect(query_flags == std::vector<std::uint8_t>{0, 1, 0}, "queries are flagged too");
+
+  // Invalid UTF-8 fails in the tokenizer after the first input has been
+  // encoded, so a flag written eagerly would already be in place.
+  const std::vector<std::string_view> failing{"a short ticket", "\xff"};
+  std::vector<std::uint8_t> untouched(failing.size(), 0xff);
+  std::vector<float> discarded(failing.size() * dim);
+  expect(model.embed_documents(failing.data(), failing.size(), discarded.data(),
+                               discarded.size(), untouched.data())
+                 .code == embed::StatusCode::TokenizerFailed,
+         "invalid UTF-8 fails in the tokenizer");
+  expect(untouched == std::vector<std::uint8_t>(failing.size(), 0xff),
+         "flags are not written when the call fails");
 }
 
 // BGE prefixes queries but not documents, so a text that exactly fills the
