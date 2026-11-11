@@ -14,8 +14,9 @@ void cyborgdb_tokenizer_free(TokenizerHandle* handle);
 // Renamed when `truncated` was added: an older archive then fails to link
 // instead of ignoring the argument and reporting nothing as truncated.
 int cyborgdb_tokenizer_encode_v2(const TokenizerHandle* handle, const char* text,
-                                 std::uint32_t* ids, std::size_t capacity,
-                                 std::size_t* written, std::uint8_t* truncated);
+                                 std::size_t len, std::uint32_t* ids,
+                                 std::size_t capacity, std::size_t* written,
+                                 std::uint8_t* truncated);
 }
 
 }  // namespace
@@ -56,8 +57,8 @@ Status Tokenizer::encode(std::string_view text, std::string_view prefix,
   std::uint8_t cut = 0;
   ids.resize(max_tokens_);
   const int rc = cyborgdb_tokenizer_encode_v2(
-      static_cast<const TokenizerHandle*>(handle_), input.c_str(), ids.data(),
-      ids.size(), &written, truncated != nullptr ? &cut : nullptr);
+      static_cast<const TokenizerHandle*>(handle_), input.data(), input.size(),
+      ids.data(), ids.size(), &written, truncated != nullptr ? &cut : nullptr);
   if (rc != 0) {
     return {StatusCode::TokenizerFailed, "encoding failed"};
   }

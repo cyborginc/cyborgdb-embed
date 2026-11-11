@@ -71,6 +71,16 @@ void mixed_batch() {
          "embed_queries succeeds with flags");
   expect(query_flags == std::vector<std::uint8_t>{0, 1, 0}, "queries are flagged too");
 
+  // Text after an embedded NUL still counts, so it can push an input over.
+  const std::string with_nul = std::string("a short ticket") + '\0' + long_text;
+  const std::string_view nul_view = with_nul;
+  std::uint8_t nul_flag = 0xff;
+  std::vector<float> nul_out(dim);
+  expect(model.embed_documents(&nul_view, 1, nul_out.data(), nul_out.size(), &nul_flag)
+                 .ok() &&
+             nul_flag == 1,
+         "text after an embedded NUL is embedded and counted");
+
   // Invalid UTF-8 fails in the tokenizer after the first input has been
   // encoded, so a flag written eagerly would already be in place.
   const std::vector<std::string_view> failing{"a short ticket", "\xff"};

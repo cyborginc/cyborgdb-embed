@@ -3,7 +3,6 @@
 //! The exported surface is deliberately tiny: everything else is localised out
 //! of the archive so Rust's runtime symbols never reach a consuming link.
 
-use std::ffi::{c_char, CStr};
 use tokenizers::tokenizer::Tokenizer;
 use tokenizers::{PaddingParams, TruncationParams};
 
@@ -53,7 +52,10 @@ pub extern "C" fn cyborgdb_tokenizer_free(handle: *mut Handle) {
     }
 }
 
-/// Encodes one string, writing ids into `ids` and setting `written`.
+/// Encodes `len` bytes of UTF-8 at `text`, writing ids into `ids` and setting
+/// `written`. The length is passed rather than relying on a terminator, so an
+/// embedded NUL is encoded like any other character instead of silently
+/// dropping the rest of the text.
 ///
 /// The encoding is already truncated to the length fixed at construction, so a
 /// buffer of that size is always sufficient. A short buffer is a caller bug and
@@ -65,7 +67,8 @@ pub extern "C" fn cyborgdb_tokenizer_free(handle: *mut Handle) {
 #[no_mangle]
 pub extern "C" fn cyborgdb_tokenizer_encode_v2(
     handle: *const Handle,
-    text: *const c_char,
+    text: *const u8,
+    len: usize,
     ids: *mut u32,
     capacity: usize,
     written: *mut usize,
@@ -75,7 +78,8 @@ pub extern "C" fn cyborgdb_tokenizer_encode_v2(
         return -1;
     }
     let handle = unsafe { &*handle };
-    let Ok(text) = (unsafe { CStr::from_ptr(text) }).to_str() else {
+    let bytes = unsafe { std::slice::from_raw_parts(text, len) };
+    let Ok(text) = std::str::from_utf8(bytes) else {
         return -1;
     };
     let Ok(encoding) = handle.tokenizer.encode(text, true) else {
@@ -96,7 +100,6 @@ pub extern "C" fn cyborgdb_tokenizer_encode_v2(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::ffi::CString;
 
     const MAX_LENGTH: usize = 16;
 
@@ -124,49 +127,76 @@ mod tests {
         handle
     }
 
-    fn encode(handle: *const Handle, words: usize) -> (usize, u8) {
-        let text = CString::new(vec!["word"; words].join(" ")).unwrap();
+    fn encode_text(handle: *const Handle, text: &str, truncated: *mut u8) -> (i32, usize) {
         let mut ids = [0u32; MAX_LENGTH];
         let mut written = 0usize;
-        let mut truncated = 0xffu8;
         let rc = cyborgdb_tokenizer_encode_v2(
             handle,
             text.as_ptr(),
+            text.len(),
             ids.as_mut_ptr(),
             ids.len(),
             &mut written,
-            &mut truncated,
+            truncated,
         );
+        (rc, written)
+    }
+
+    fn encode(handle: *const Handle, text: &str) -> (usize, u8) {
+        let mut truncated = 0xffu8;
+        let (rc, written) = encode_text(handle, text, &mut truncated);
         assert_eq!(rc, 0);
         (written, truncated)
+    }
+
+    fn words(n: usize) -> String {
+        vec!["word"; n].join(" ")
     }
 
     #[test]
     fn flags_only_text_that_was_cut() {
         let handle = handle();
         let text_capacity = MAX_LENGTH - 2;
-        assert_eq!(encode(handle, 3), (5, 0));
-        assert_eq!(encode(handle, text_capacity), (MAX_LENGTH, 0), "exact fit");
-        assert_eq!(encode(handle, text_capacity + 1), (MAX_LENGTH, 1));
-        assert_eq!(encode(handle, 600), (MAX_LENGTH, 1));
+        assert_eq!(encode(handle, &words(3)), (5, 0));
+        assert_eq!(encode(handle, &words(text_capacity)), (MAX_LENGTH, 0), "exact fit");
+        assert_eq!(encode(handle, &words(text_capacity + 1)), (MAX_LENGTH, 1));
+        assert_eq!(encode(handle, &words(600)), (MAX_LENGTH, 1));
         cyborgdb_tokenizer_free(handle);
     }
 
     #[test]
     fn null_flag_is_ignored() {
         let handle = handle();
-        let text = CString::new("word word").unwrap();
+        assert_eq!(encode_text(handle, "word word", std::ptr::null_mut()), (0, 4));
+        cyborgdb_tokenizer_free(handle);
+    }
+
+    // A NUL-terminated handoff would stop at the NUL: three words, not cut.
+    #[test]
+    fn text_after_an_embedded_nul_is_encoded() {
+        let handle = handle();
+        assert_eq!(encode(handle, "word \0 word"), (5, 0));
+        let text = format!("{} \0 {}", words(3), words(20));
+        assert_eq!(encode(handle, &text), (MAX_LENGTH, 1));
+        cyborgdb_tokenizer_free(handle);
+    }
+
+    #[test]
+    fn invalid_utf8_fails() {
+        let handle = handle();
+        let bytes = [b'w', 0xff];
         let mut ids = [0u32; MAX_LENGTH];
         let mut written = 0usize;
         let rc = cyborgdb_tokenizer_encode_v2(
             handle,
-            text.as_ptr(),
+            bytes.as_ptr(),
+            bytes.len(),
             ids.as_mut_ptr(),
             ids.len(),
             &mut written,
             std::ptr::null_mut(),
         );
-        assert_eq!((rc, written), (0, 4));
+        assert_eq!(rc, -1);
         cyborgdb_tokenizer_free(handle);
     }
 }
