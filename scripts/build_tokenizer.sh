@@ -20,7 +20,7 @@ PLATFORM="${TOKENIZER_PLATFORM:-$(uname -s | tr 'A-Z' 'a-z')-$(uname -m | sed 's
 VENDOR="${TOKENIZER_VENDOR_DIR:-$ROOT/tokenizer/prebuilt/$PLATFORM}"
 PHASE="${1:-all}"
 
-EXPORTS=(cyborgdb_tokenizer_new cyborgdb_tokenizer_free cyborgdb_tokenizer_encode)
+EXPORTS=(cyborgdb_tokenizer_new cyborgdb_tokenizer_free cyborgdb_tokenizer_encode_v2)
 
 # rustc and the C compiler behind the onig crate both read this. Left unset,
 # objects claim the build host's macOS version, and an older wheel refuses them.

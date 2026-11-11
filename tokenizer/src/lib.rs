@@ -63,7 +63,7 @@ pub extern "C" fn cyborgdb_tokenizer_free(handle: *mut Handle) {
 /// tokenizer moves whatever it cut into the overflowing encodings, so this costs
 /// nothing; `written == max_length` cannot tell a cut text from an exact fit.
 #[no_mangle]
-pub extern "C" fn cyborgdb_tokenizer_encode(
+pub extern "C" fn cyborgdb_tokenizer_encode_v2(
     handle: *const Handle,
     text: *const c_char,
     ids: *mut u32,
@@ -129,7 +129,7 @@ mod tests {
         let mut ids = [0u32; MAX_LENGTH];
         let mut written = 0usize;
         let mut truncated = 0xffu8;
-        let rc = cyborgdb_tokenizer_encode(
+        let rc = cyborgdb_tokenizer_encode_v2(
             handle,
             text.as_ptr(),
             ids.as_mut_ptr(),
@@ -158,7 +158,7 @@ mod tests {
         let text = CString::new("word word").unwrap();
         let mut ids = [0u32; MAX_LENGTH];
         let mut written = 0usize;
-        let rc = cyborgdb_tokenizer_encode(
+        let rc = cyborgdb_tokenizer_encode_v2(
             handle,
             text.as_ptr(),
             ids.as_mut_ptr(),
