@@ -58,6 +58,10 @@ pub extern "C" fn cyborgdb_tokenizer_free(handle: *mut Handle) {
 /// The encoding is already truncated to the length fixed at construction, so a
 /// buffer of that size is always sufficient. A short buffer is a caller bug and
 /// returns 1 without writing.
+///
+/// When `truncated` is non-null it is set to 1 if the text did not fit. The
+/// tokenizer moves whatever it cut into the overflowing encodings, so this costs
+/// nothing; `written == max_length` cannot tell a cut text from an exact fit.
 #[no_mangle]
 pub extern "C" fn cyborgdb_tokenizer_encode(
     handle: *const Handle,
@@ -65,6 +69,7 @@ pub extern "C" fn cyborgdb_tokenizer_encode(
     ids: *mut u32,
     capacity: usize,
     written: *mut usize,
+    truncated: *mut u8,
 ) -> i32 {
     if handle.is_null() || text.is_null() || written.is_null() {
         return -1;
@@ -78,9 +83,90 @@ pub extern "C" fn cyborgdb_tokenizer_encode(
     };
     let source = encoding.get_ids();
     unsafe { *written = source.len() };
+    if !truncated.is_null() {
+        unsafe { *truncated = !encoding.get_overflowing().is_empty() as u8 };
+    }
     if source.len() > capacity || ids.is_null() {
         return 1;
     }
     unsafe { std::ptr::copy_nonoverlapping(source.as_ptr(), ids, source.len()) };
     0
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::ffi::CString;
+
+    const MAX_LENGTH: usize = 16;
+
+    // Shaped like the registry's tokenizers: [CLS] and [SEP] added by a
+    // post-processor, so the limit covers two special tokens.
+    const DEFINITION: &str = r#"{
+        "version": "1.0",
+        "truncation": null,
+        "padding": null,
+        "added_tokens": [],
+        "normalizer": null,
+        "pre_tokenizer": {"type": "Whitespace"},
+        "post_processor": {"type": "BertProcessing", "sep": ["[SEP]", 2], "cls": ["[CLS]", 1]},
+        "decoder": null,
+        "model": {
+            "type": "WordLevel",
+            "vocab": {"[UNK]": 0, "[CLS]": 1, "[SEP]": 2, "word": 3},
+            "unk_token": "[UNK]"
+        }
+    }"#;
+
+    fn handle() -> *mut Handle {
+        let handle = cyborgdb_tokenizer_new(DEFINITION.as_ptr(), DEFINITION.len(), MAX_LENGTH);
+        assert!(!handle.is_null());
+        handle
+    }
+
+    fn encode(handle: *const Handle, words: usize) -> (usize, u8) {
+        let text = CString::new(vec!["word"; words].join(" ")).unwrap();
+        let mut ids = [0u32; MAX_LENGTH];
+        let mut written = 0usize;
+        let mut truncated = 0xffu8;
+        let rc = cyborgdb_tokenizer_encode(
+            handle,
+            text.as_ptr(),
+            ids.as_mut_ptr(),
+            ids.len(),
+            &mut written,
+            &mut truncated,
+        );
+        assert_eq!(rc, 0);
+        (written, truncated)
+    }
+
+    #[test]
+    fn flags_only_text_that_was_cut() {
+        let handle = handle();
+        let text_capacity = MAX_LENGTH - 2;
+        assert_eq!(encode(handle, 3), (5, 0));
+        assert_eq!(encode(handle, text_capacity), (MAX_LENGTH, 0), "exact fit");
+        assert_eq!(encode(handle, text_capacity + 1), (MAX_LENGTH, 1));
+        assert_eq!(encode(handle, 600), (MAX_LENGTH, 1));
+        cyborgdb_tokenizer_free(handle);
+    }
+
+    #[test]
+    fn null_flag_is_ignored() {
+        let handle = handle();
+        let text = CString::new("word word").unwrap();
+        let mut ids = [0u32; MAX_LENGTH];
+        let mut written = 0usize;
+        let rc = cyborgdb_tokenizer_encode(
+            handle,
+            text.as_ptr(),
+            ids.as_mut_ptr(),
+            ids.len(),
+            &mut written,
+            std::ptr::null_mut(),
+        );
+        assert_eq!((rc, written), (0, 4));
+        cyborgdb_tokenizer_free(handle);
+    }
 }

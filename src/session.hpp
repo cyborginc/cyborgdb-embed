@@ -1,6 +1,7 @@
 #ifndef CYBORGDB_EMBED_SESSION_HPP
 #define CYBORGDB_EMBED_SESSION_HPP
 
+#include <cstdint>
 #include <memory>
 #include <string>
 
@@ -17,7 +18,8 @@ class Session {
 
   virtual Status encode(const std::string_view* texts, std::size_t n,
                         std::string_view prefix, float* out,
-                        std::size_t out_capacity) const = 0;
+                        std::size_t out_capacity,
+                        std::uint8_t* truncated) const = 0;
 
   const RegistryEntry* entry = nullptr;
   Provider provider = Provider::CPU;

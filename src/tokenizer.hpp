@@ -26,9 +26,10 @@ class Tokenizer {
                      std::size_t max_tokens, std::unique_ptr<Tokenizer>& out);
 
   // The caller's prefix is applied before tokenisation, not after: a prefix
-  // tokenises differently joined to the text than on its own.
+  // tokenises differently joined to the text than on its own. It therefore
+  // counts against the limit, and can be what pushes a text over it.
   Status encode(std::string_view text, std::string_view prefix,
-                std::vector<std::uint32_t>& ids) const;
+                std::vector<std::uint32_t>& ids, bool* truncated = nullptr) const;
 
  private:
   Tokenizer(void* handle, std::size_t max_tokens) noexcept
