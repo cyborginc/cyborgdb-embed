@@ -20,7 +20,7 @@ PLATFORM="${TOKENIZER_PLATFORM:-$(uname -s | tr 'A-Z' 'a-z')-$(uname -m | sed 's
 VENDOR="${TOKENIZER_VENDOR_DIR:-$ROOT/tokenizer/prebuilt/$PLATFORM}"
 PHASE="${1:-all}"
 
-EXPORTS=(cyborgdb_tokenizer_new cyborgdb_tokenizer_free cyborgdb_tokenizer_encode)
+EXPORTS=(cyborgdb_tokenizer_new cyborgdb_tokenizer_free cyborgdb_tokenizer_encode_v2)
 
 # rustc and the C compiler behind the onig crate both read this. Left unset,
 # objects claim the build host's macOS version, and an older wheel refuses them.
@@ -131,6 +131,8 @@ case "$PHASE" in
   --sync-only) sync_manifest ;;
   build)   build ;;
   isolate) isolate ;;
-  all)     build && isolate ;;
+  # Not `build && isolate`: set -e is suspended inside the left side of &&, so a
+  # failed cargo build would fall through and repackage a stale archive.
+  all)     build; isolate ;;
   *)       echo "usage: $0 [build|isolate|all]" >&2; exit 2 ;;
 esac

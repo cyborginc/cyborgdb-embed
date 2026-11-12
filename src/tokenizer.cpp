@@ -11,9 +11,12 @@ extern "C" {
 TokenizerHandle* cyborgdb_tokenizer_new(const unsigned char* json, std::size_t len,
                                         std::size_t max_length);
 void cyborgdb_tokenizer_free(TokenizerHandle* handle);
-int cyborgdb_tokenizer_encode(const TokenizerHandle* handle, const char* text,
-                              std::uint32_t* ids, std::size_t capacity,
-                              std::size_t* written);
+// Renamed when `truncated` was added: an older archive then fails to link
+// instead of ignoring the argument and reporting nothing as truncated.
+int cyborgdb_tokenizer_encode_v2(const TokenizerHandle* handle, const char* text,
+                                 std::size_t len, std::uint32_t* ids,
+                                 std::size_t capacity, std::size_t* written,
+                                 std::uint8_t* truncated);
 }
 
 }  // namespace
@@ -44,20 +47,23 @@ Status Tokenizer::load(const std::string& path, std::size_t max_tokens,
 }
 
 Status Tokenizer::encode(std::string_view text, std::string_view prefix,
-                         std::vector<std::uint32_t>& ids) const {
+                         std::vector<std::uint32_t>& ids,
+                         bool* truncated) const {
   std::string input;
   input.reserve(prefix.size() + text.size());
   input.append(prefix).append(text);
 
   std::size_t written = 0;
+  std::uint8_t cut = 0;
   ids.resize(max_tokens_);
-  const int rc = cyborgdb_tokenizer_encode(
-      static_cast<const TokenizerHandle*>(handle_), input.c_str(), ids.data(),
-      ids.size(), &written);
+  const int rc = cyborgdb_tokenizer_encode_v2(
+      static_cast<const TokenizerHandle*>(handle_), input.data(), input.size(),
+      ids.data(), ids.size(), &written, truncated != nullptr ? &cut : nullptr);
   if (rc != 0) {
     return {StatusCode::TokenizerFailed, "encoding failed"};
   }
   ids.resize(written);
+  if (truncated != nullptr) *truncated = cut != 0;
   return {};
 }
 

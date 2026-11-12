@@ -69,8 +69,8 @@ class OrtSession final : public Session {
   }
 
   Status encode(const std::string_view* texts, std::size_t n,
-                std::string_view prefix, float* out,
-                std::size_t out_capacity) const override;
+                std::string_view prefix, float* out, std::size_t out_capacity,
+                std::uint8_t* truncated) const override;
 
  private:
   mutable Ort::Session session_;
@@ -81,7 +81,8 @@ class OrtSession final : public Session {
 
 Status OrtSession::encode(const std::string_view* texts, std::size_t n,
                           std::string_view prefix, float* out,
-                          std::size_t out_capacity) const {
+                          std::size_t out_capacity,
+                          std::uint8_t* truncated) const {
   const std::size_t dim = entry->info.dimension;
   if (n != 0 && (texts == nullptr || out == nullptr)) {
     return {StatusCode::InvalidArgument, "texts and out must be non-null"};
@@ -101,10 +102,15 @@ Status OrtSession::encode(const std::string_view* texts, std::size_t n,
   // and excluded from pooling.
   std::vector<std::vector<std::uint32_t>> tokens(n);
   std::vector<std::size_t> order(n);
+  std::vector<std::uint8_t> cut(truncated != nullptr ? n : 0);
   for (std::size_t i = 0; i < n; ++i) {
-    if (Status status = tokenizer_->encode(texts[i], prefix, tokens[i]); !status) {
+    bool was_cut = false;
+    if (Status status = tokenizer_->encode(texts[i], prefix, tokens[i],
+                                           truncated != nullptr ? &was_cut : nullptr);
+        !status) {
       return status;
     }
+    if (truncated != nullptr) cut[i] = was_cut ? 1 : 0;
     order[i] = i;
   }
   std::stable_sort(order.begin(), order.end(), [&](std::size_t a, std::size_t b) {
@@ -175,6 +181,7 @@ Status OrtSession::encode(const std::string_view* texts, std::size_t n,
     }
     start += rows;
   }
+  if (truncated != nullptr) std::copy(cut.begin(), cut.end(), truncated);
   return {};
 }
 

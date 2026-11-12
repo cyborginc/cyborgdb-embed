@@ -56,6 +56,23 @@ Documents and queries use separate calls because some models require asymmetric 
 
 `Embedder` is cheap to copy and thread-safe. Copies of the same model share one in-process session and one copy of the weights.
 
+### Long text
+
+Each model reads at most its **Max tokens** (see [Supported models](#supported-models)); text beyond that is cut off before embedding and does not affect the vector. The limit includes the model's special tokens and any prefix it adds, so slightly less text fits than the number suggests. Split long documents into chunks well below the limit before embedding them.
+
+To find out which inputs were cut, pass one flag per input. Each is set to 1 if that input was truncated and 0 otherwise, and the flags are written only when the call succeeds:
+
+```cpp
+std::vector<std::uint8_t> truncated(docs.size());
+
+model.embed_documents(
+    docs.data(),
+    docs.size(),
+    out.data(),
+    out.size(),
+    truncated.data());
+```
+
 ### Looking up a model by name
 
 `find_model` accepts the names `sentence-transformers` accepts: the full upstream id (`sentence-transformers/all-MiniLM-L6-v2`) or a bare name (`all-MiniLM-L6-v2`), matched case-insensitively.

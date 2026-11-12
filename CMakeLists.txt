@@ -99,6 +99,10 @@ if(CYBORGDB_EMBED_BUILD_TESTS)
   target_link_libraries(runtime_test PRIVATE cyborgdb::embed Threads::Threads)
   add_test(NAME runtime COMMAND runtime_test)
 
+  add_executable(truncation_test tests/unit/truncation_test.cpp)
+  target_link_libraries(truncation_test PRIVATE cyborgdb::embed)
+  add_test(NAME truncation COMMAND truncation_test)
+
   add_executable(golden_test tests/golden_test.cpp)
   target_link_libraries(golden_test PRIVATE cyborgdb::embed)
 

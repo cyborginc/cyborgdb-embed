@@ -126,17 +126,19 @@ Identity Embedder::identity() const noexcept {
 }
 
 Status Embedder::embed_documents(const std::string_view* texts, std::size_t n,
-                                 float* out, std::size_t out_capacity) const {
+                                 float* out, std::size_t out_capacity,
+                                 std::uint8_t* truncated) const {
   if (!valid()) return {StatusCode::InvalidArgument, "embedder is not open"};
   return impl_->session->encode(texts, n, impl_->session->entry->doc_prefix, out,
-                                out_capacity);
+                                out_capacity, truncated);
 }
 
 Status Embedder::embed_queries(const std::string_view* texts, std::size_t n,
-                               float* out, std::size_t out_capacity) const {
+                               float* out, std::size_t out_capacity,
+                               std::uint8_t* truncated) const {
   if (!valid()) return {StatusCode::InvalidArgument, "embedder is not open"};
   return impl_->session->encode(texts, n, impl_->session->entry->query_prefix,
-                                out, out_capacity);
+                                out, out_capacity, truncated);
 }
 
 Status open(ModelId id, const Options& options, Embedder& out) {

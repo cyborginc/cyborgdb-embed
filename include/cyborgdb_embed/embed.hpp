@@ -4,6 +4,7 @@
 #define CYBORGDB_EMBED_HPP
 
 #include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <string_view>
@@ -152,12 +153,20 @@ class Embedder {
   // Documents and queries are separate calls because models apply asymmetric
   // prefixes, and a direction flag is easy to pass backwards.
   //
-  // Safe to call concurrently. Each call writes only to its own out.
+  // Inputs longer than info().max_seq_length tokens are cut to fit. When
+  // truncated is non-null it must hold n entries; each is set to 1 if that
+  // input was cut and 0 otherwise. It is written only on success. The limit
+  // includes the special tokens and any prefix the model adds.
+  //
+  // Safe to call concurrently. Each call writes only to its own out and
+  // truncated.
   Status embed_documents(const std::string_view* texts, std::size_t n,
-                         float* out, std::size_t out_capacity) const;
+                         float* out, std::size_t out_capacity,
+                         std::uint8_t* truncated = nullptr) const;
 
   Status embed_queries(const std::string_view* texts, std::size_t n,
-                       float* out, std::size_t out_capacity) const;
+                       float* out, std::size_t out_capacity,
+                       std::uint8_t* truncated = nullptr) const;
 
  private:
   friend Status open(ModelId, const Options&, Embedder&);
