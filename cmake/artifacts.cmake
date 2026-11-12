@@ -37,9 +37,9 @@ set(CYBORGDB_EMBED_ARTIFACT_DIGESTS
   "onnxruntime-darwin-arm64  8298f53dd9044ad1f1e15a87ae2e42cc0a4125de1fec00e25ed1b90cb159bfe2"
   "onnxruntime-linux-amd64   2c8794b2ab577f6381cf013882417fc5492a13f937d28ae5c771a0c24111b084"
   "onnxruntime-linux-arm64   c7f9cf02741add1b3b29dbc4fce5748ae149b1c48f066e79b08affb82bf75409"
-  "tokenizer-darwin-arm64    f90daa41f8c182a9451c8eeeafd95d81899992aebd0752e3c9085d74f358b058"
-  "tokenizer-linux-amd64     00d2365025a4dd7e985cd20568398e43bbfe0effcd8a51cf07c0a32d09e013f2"
-  "tokenizer-linux-arm64     c354d2312a3d17f772b1e143dad489f3313281dcc5c02b0aeea6af9696d56ad2"
+  "tokenizer-darwin-arm64    65a13b5143f38710a5b47079831e94a9a0056d4433bb378cc0a718a135947742"
+  "tokenizer-linux-amd64     1703d79c415090e15dd84e7a7f0c56a88759d55b52053edcb3c9d3da4ad3c5fc"
+  "tokenizer-linux-arm64     34c4882e63d9d388020018690d59bc9431c90cd70abf0c3f14bee0a7da62335d"
 )
 
 option(CYBORGDB_EMBED_STRIP_ARTIFACTS
