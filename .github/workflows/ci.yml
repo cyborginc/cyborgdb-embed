@@ -10,6 +10,8 @@ on:
   push:
     branches: [main]
   pull_request:
+  # Dispatched by release-artifacts.yml for the commits it pushes.
+  workflow_dispatch:
 
 # Nothing here writes to the repository. Declared at the top level so a new job
 # starts read-only rather than inheriting whatever the default happens to be.

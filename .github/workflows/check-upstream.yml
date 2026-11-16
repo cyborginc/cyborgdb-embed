@@ -1,12 +1,13 @@
 # Watches the upstream projects whose versions are pinned here and opens a pull
 # request when one moves.
 #
-# It only bumps the pin. Publishing archives is a separate, deliberate step:
-# push the component's tag once the pin is merged, and release-artifacts.yml
-# builds and uploads. Keeping those apart means a new upstream version never
-# reaches anyone without someone choosing to release it, and the parity suite
-# gets a chance to run first — a tokenizers release can legitimately change
-# tokenisation, which moves every vector.
+# An ONNX Runtime pull request also starts a release-artifacts.yml run on its
+# branch. That run publishes only once someone approves the release environment,
+# then commits the digests to the branch, so the PR is mergeable as it stands.
+#
+# A tokenizers pull request only bumps the pin: push its tag by hand once the
+# parity suite has run, since a tokenizers release can change tokenisation and
+# move every vector.
 name: check-upstream
 
 on:
@@ -17,12 +18,15 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  actions: write
 
 jobs:
   onnxruntime:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # An open PR may already carry published digests, and regenerating its
+      # branch would drop them.
       - id: versions
         env:
           GH_TOKEN: ${{ github.token }}
@@ -30,11 +34,14 @@ jobs:
           current=v$(./scripts/version.py onnxruntime)
           latest=$(gh release list --repo microsoft/onnxruntime --limit 20 --json tagName \
             --jq '[.[] | select(.tagName | test("^v[0-9]+\\.[0-9]+\\.[0-9]+$"))][0].tagName')
-          echo "current=$current latest=$latest"
+          open=$(gh pr list --head "ort-$latest" --state open --json number --jq length)
+          echo "current=$current latest=$latest open=$open"
           echo "current=$current" >> "$GITHUB_OUTPUT"
           echo "latest=$latest" >> "$GITHUB_OUTPUT"
+          [ "$latest" != "$current" ] && [ "$open" = 0 ] && bump=true || bump=false
+          echo "bump=$bump" >> "$GITHUB_OUTPUT"
 
-      - if: steps.versions.outputs.latest != steps.versions.outputs.current
+      - if: steps.versions.outputs.bump == 'true'
         run: |
           python3 - <<'PY'
           import json, pathlib
@@ -45,23 +52,26 @@ jobs:
           p.write_text(json.dumps(d, indent=2) + "\n")
           PY
 
-      - if: steps.versions.outputs.latest != steps.versions.outputs.current
+      - if: steps.versions.outputs.bump == 'true'
+        id: pr
         uses: peter-evans/create-pull-request@v6
         with:
           branch: ort-${{ steps.versions.outputs.latest }}
           title: "Pin ONNX Runtime ${{ steps.versions.outputs.latest }}"
           body: |
-            ONNX Runtime moved from ${{ steps.versions.outputs.current }} to
-            ${{ steps.versions.outputs.latest }}.
+            ONNX Runtime moved from ${{ steps.versions.outputs.current }} to ${{ steps.versions.outputs.latest }}.
 
-            This only changes the pin. Nothing is published until an
-            `ort-<version>-<build>` tag is pushed, and the release workflow
-            refuses a tag whose version disagrees with this pin.
+            A `release-artifacts` run has started on this branch. It builds and verifies the archives, then waits for approval of the `release` environment. Once approved, it publishes them and commits their digests here. Merge after that commit lands and CI passes.
 
-            Before releasing: the build flags are load-bearing and have broken on
-            version changes before — `--disable_contrib_ops` breaks linux/arm64,
-            and symbol isolation has to keep working on both object formats.
+            Before approving: the build flags are load-bearing and have broken on version changes before — `--disable_contrib_ops` breaks linux/arm64, and symbol isolation has to keep working on both object formats.
           add-paths: versions.json
+
+      - if: steps.pr.outputs.pull-request-operation == 'created'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run release-artifacts.yml --ref "ort-${{ steps.versions.outputs.latest }}" \
+            -f component=onnxruntime -f publish=true
 
   tokenizers:
     runs-on: ubuntu-latest
